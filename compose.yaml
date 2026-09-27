@@ -20,7 +20,7 @@ services:
 
   migrate:
     build:
-      context: .
+      context: ./backend
       target: migrate
     user: "${APP_UID:-65532}:${APP_GID:-65532}"
     read_only: true
@@ -39,7 +39,7 @@ services:
 
   api:
     build:
-      context: .
+      context: ./backend
       target: authapi
     user: "${APP_UID:-65532}:${APP_GID:-65532}"
     read_only: true

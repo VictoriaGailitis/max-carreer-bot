@@ -13,7 +13,7 @@ down:
 	docker compose down
 
 test:
-	docker build --target test -t max-carreer-bot-test .
+	docker build --target test -t max-carreer-bot-test ./backend
 
 smoke:
 	bash scripts/checks/smoke-api.sh

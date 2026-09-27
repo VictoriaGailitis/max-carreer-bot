@@ -1,6 +1,6 @@
 # Подключение фронтенда
 
-Все команды backend выполняются из корня репозитория. Контракт: [OpenAPI](../api/openapi.yaml); клиент: [api/client/client.ts](../api/client/client.ts).
+Все команды стенда выполняются из корня общего репозитория. Исходники интерфейса добавляются в `frontend/`, Go-сервер находится в `backend/`. Контракт: [OpenAPI](../api/openapi.yaml); клиент: [api/client/client.ts](../api/client/client.ts).
 
 ## 1. Запустить backend
 
@@ -95,7 +95,7 @@ await api.complete(saved.revision, completionKey);
 
 `favorites()`, `addFavorite(id)`, `removeFavorite(id)` работают с тем же bearer. Для исчезнувшей карточки `effective_status = unavailable` и `item = null`; показывайте возможность удалить её из избранного. Для `closed` отключайте запись. `availability_hint = check_source` означает, что доступность нужно уточнить у источника. Открывайте валидированный `action_url` карточки.
 
-До импорта реального каталога экраны карточек проверяются на frontend mocks либо изолированным `make smoke`. [Синтетический набор](../testdata/catalog-demo.v1.json) содержит вымышленные ссылки и не предназначен для публикации. Backend не подменяет им реальную выдачу.
+До импорта реального каталога экраны карточек проверяются на frontend mocks либо изолированным `make smoke`. [Синтетический набор](../backend/testdata/catalog-demo.v1.json) содержит вымышленные ссылки и не предназначен для публикации. Backend не подменяет им реальную выдачу.
 
 ## 6. Ошибки
 
@@ -116,13 +116,13 @@ await api.complete(saved.revision, completionKey);
 
 ## 7. Собранный frontend через Caddy
 
-Соберите frontend его штатной командой. В backend `.env` укажите путь к существующему каталогу с `index.html`:
+Добавьте исходники в `frontend/` и соберите интерфейс его штатной командой. Стенд по умолчанию читает `frontend/dist/` с `index.html`. При другой структуре сборки укажите путь в корневой `.env`:
 
 ```dotenv
-FRONTEND_DIST=../frontend/dist
+FRONTEND_DIST=./frontend/dist
 ```
 
-Путь относительно каталога backend; абсолютный путь тоже допустим, но остаётся только в локальной `.env`.
+Путь относительно корня общего репозитория; абсолютный путь тоже допустим, но остаётся только в локальной `.env`. Зависимости и настройки сборки интерфейса хранятся в `frontend/`.
 
 ```sh
 docker compose -f compose.yaml -f deploy/compose.frontend.yaml up --build -d
@@ -134,4 +134,4 @@ docker compose -f compose.yaml -f deploy/compose.frontend.yaml up --build -d
 docker compose -f compose.yaml -f deploy/compose.production.yaml -f deploy/compose.frontend.yaml up --build -d
 ```
 
-Требования к домену, секретам и MAX — в [runbook](operations.md). Backend-репозиторий не содержит исходники frontend и не выбирает его framework.
+Требования к домену, секретам и MAX — в [runbook](operations.md). Папка `frontend/` пока содержит инструкцию для будущего интерфейса; framework будет определён при добавлении его исходников.

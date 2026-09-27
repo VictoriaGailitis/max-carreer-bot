@@ -39,6 +39,6 @@ env = root / ".env"
 fd = os.open(env, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
 with os.fdopen(fd, "w", encoding="utf-8") as stream:
     stream.write(f"APP_UID={os.getuid()}\nAPP_GID={os.getgid()}\n")
-    stream.write("PUBLIC_DOMAIN=\nMAX_APP_BOT_USERNAME=\nCORS_ALLOWED_ORIGINS=\nFRONTEND_DIST=\n")
+    stream.write("PUBLIC_DOMAIN=\nMAX_APP_BOT_USERNAME=\nCORS_ALLOWED_ORIGINS=\nFRONTEND_DIST=./frontend/dist\n")
 print("Created local-only .env and secret files. No secret values were printed.")
 PY

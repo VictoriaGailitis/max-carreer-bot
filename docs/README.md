@@ -9,6 +9,10 @@
 | [api.md](api.md) | Реализованные API, данные пользователей и хранение |
 | [frontend.md](frontend.md) | Вход, опросник, клиент API и подключение интерфейса |
 | [operations.md](operations.md) | Compose, миграции, секреты и публичное размещение |
-| [repository.md](repository.md) | Проверки перед commit/push и состав Git-репозитория |
 
 Машиночитаемый контракт — [OpenAPI](../api/openapi.yaml), клиент — [TypeScript](../api/client/client.ts).
+
+## Части проекта
+
+- [Backend](../backend/README.md) — структура Go-модуля и Docker-сборка.
+- [Frontend](../frontend/README.md) — куда добавлять интерфейс и как подключить его к общему стенду.

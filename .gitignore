@@ -1,6 +1,7 @@
 .local/
 .env*
 !.env.example
+!**/.env.example
 secrets/
 tmp/
 .DS_Store
@@ -16,3 +17,5 @@ node_modules/
 .vscode/
 *.test
 *.out
+.kilo/
+.kilocode/

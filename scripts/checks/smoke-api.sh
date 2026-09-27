@@ -6,8 +6,8 @@ for program in docker curl jq python3; do
 done
 
 cd "$(dirname "$0")/../.."
-docker build --target ops -t max-carreer-bot-ops . >/dev/null
-docker build --target authapi -t max-carreer-bot-authapi . >/dev/null
+docker build --target ops -t max-carreer-bot-ops ./backend >/dev/null
+docker build --target authapi -t max-carreer-bot-authapi ./backend >/dev/null
 
 smoke_root=$(mktemp -d /tmp/max-carreer-auth.XXXXXX)
 network_name="max-carreer-smoke-$(date +%s)-$$"
@@ -33,10 +33,10 @@ for _ in {1..30}; do
   sleep 1
 done
 if [[ "$ready" != 1 ]]; then docker logs "$db_id"; exit 1; fi
-docker exec -i "$db_id" psql -U postgres -d postgres -v ON_ERROR_STOP=1 < migrations/0001_user_core.up.sql >/dev/null
-docker exec -i "$db_id" psql -U postgres -d postgres -v ON_ERROR_STOP=1 < migrations/0002_profile_state.up.sql >/dev/null
-docker exec -i "$db_id" psql -U postgres -d postgres -v ON_ERROR_STOP=1 < migrations/0003_catalog.up.sql >/dev/null
-docker exec -i "$db_id" psql -U postgres -d postgres -v ON_ERROR_STOP=1 < migrations/0004_bot_inbox.up.sql >/dev/null
+docker exec -i "$db_id" psql -U postgres -d postgres -v ON_ERROR_STOP=1 < backend/migrations/0001_user_core.up.sql >/dev/null
+docker exec -i "$db_id" psql -U postgres -d postgres -v ON_ERROR_STOP=1 < backend/migrations/0002_profile_state.up.sql >/dev/null
+docker exec -i "$db_id" psql -U postgres -d postgres -v ON_ERROR_STOP=1 < backend/migrations/0003_catalog.up.sql >/dev/null
+docker exec -i "$db_id" psql -U postgres -d postgres -v ON_ERROR_STOP=1 < backend/migrations/0004_bot_inbox.up.sql >/dev/null
 
 printf 'test-bot-token\n' > "$smoke_root/secrets/bot-token"
 printf 'smoke-webhook-secret\n' > "$smoke_root/secrets/webhook-secret"
@@ -78,7 +78,7 @@ for _ in 1 2; do
 done
 [[ "$(docker exec "$db_id" psql -U postgres -d postgres -At -c "SELECT count(*) FROM bot_inbox WHERE status='pending' AND payload_ciphertext IS NOT NULL")" == 1 ]]
 [[ "$(curl -sS -o /dev/null -w '%{http_code}' -H 'Content-Type: application/json' -H 'X-Max-Bot-Api-Secret: smoke-webhook-secret' -d '{' "$webhook")" == 400 ]]
-docker build --target test -t max-carreer-bot-test . >/dev/null
+docker build --target test -t max-carreer-bot-test ./backend >/dev/null
 docker run --rm --network "$network_name" --user "$(id -u):$(id -g)" \
   -e BOT_INBOX_TEST_DB_URL_FILE=/secrets/db-url \
   -e BOT_INBOX_TEST_DATA_KEY_FILE=/secrets/data-key \
@@ -152,14 +152,14 @@ different_body_status=$(curl -sS -o /dev/null -w '%{http_code}' -H "Authorizatio
 [[ "$(jq -r '.profile_revision == 1 and .draft == null and .draft_revision == 2' <<< "$(curl -fsS -H "Authorization: Bearer $token_one_again" "$base/me")")" == true ]]
 
 docker run --rm --network "$network_name" --user "$(id -u):$(id -g)" \
-  --mount "type=bind,src=$PWD/testdata,dst=/fixture,readonly" \
+  --mount "type=bind,src=$PWD/backend/testdata,dst=/fixture,readonly" \
   --mount "type=bind,src=$smoke_root/secrets,dst=/secrets,readonly" \
   max-carreer-bot-ops catalog import -file /fixture/catalog-demo.v1.json \
   -database-url-file /secrets/db-url -allow-domain example.test >/dev/null
 [[ "$(curl -sS -o /dev/null -w '%{http_code}' -H "Authorization: Bearer $token_one_again" "$base/recommendations")" == 503 ]]
 [[ "$(curl -sS -o /dev/null -w '%{http_code}' http://127.0.0.1:18081/readyz)" == 503 ]]
 jq '.is_demo=false | .items |= map(.is_demo=false) | .items += [(.items[2] | .id="demo-closed-event" | .availability="closed"), (.items[0] | .id="demo-draft-course" | .publication_status="draft")]' \
-  testdata/catalog-demo.v1.json > "$smoke_root/live.json"
+  backend/testdata/catalog-demo.v1.json > "$smoke_root/live.json"
 docker run --rm --network "$network_name" --user "$(id -u):$(id -g)" \
   --mount "type=bind,src=$smoke_root,dst=/work,readonly" \
   max-carreer-bot-ops catalog import -file /work/live.json \

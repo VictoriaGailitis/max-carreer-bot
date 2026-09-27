@@ -1,0 +1,15 @@
+README.md
+.git/
+.env*
+.local/
+secrets/
+tmp/
+bin/
+coverage/
+*.key
+*.pem
+*.log
+*.test
+*.out
+.DS_Store
+._*
