@@ -1,0 +1,738 @@
+openapi: 3.1.0
+info:
+  title: Навигатор возможностей — Backend API
+  version: 0.6.0
+  description: >-
+    API входа MAX, опросника, зашифрованного профиля,
+    каталога, избранного и webhook бота MAX.
+servers:
+  - url: /
+    description: Один origin с фронтендом
+  - url: http://127.0.0.1:18080
+    description: Локальный Compose
+paths:
+  /api/v1/webhooks/max:
+    post:
+      summary: Принять событие бота MAX
+      description: >-
+        Секрет подписки проверяется до разбора тела. bot_started и личное
+        сообщение /start ставятся в зашифрованную очередь. Повтор события
+        подтверждается без новой задачи. Другие корректные события игнорируются.
+      parameters:
+        - in: header
+          name: X-Max-Bot-Api-Secret
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        '200': { description: Событие сохранено или проигнорировано }
+        '400': { description: Некорректное событие }
+        '401': { description: Неверный секрет подписки }
+        '413': { description: Тело превышает 256 KiB }
+        '415': { description: Ожидается JSON }
+        '503': { description: Очередь недоступна; MAX может повторить доставку }
+  /api/v1/recommendations:
+    get:
+      summary: Получить активные карточки в порядке соответствия профилю
+      security: [{ BearerAuth: [] }]
+      responses:
+        '200': { description: Персональная выдача, content: { application/json: { schema: { $ref: '#/components/schemas/CatalogResult' } } } }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '503': { $ref: '#/components/responses/Unavailable' }
+  /api/v1/opportunities:
+    get:
+      summary: Получить активные карточки с фильтрами
+      security: [{ BearerAuth: [] }]
+      parameters:
+        - { in: query, name: type, schema: { type: string, enum: [course, internship, event] } }
+        - { in: query, name: direction, schema: { type: string } }
+        - { in: query, name: format, schema: { type: string, enum: [online, offline, hybrid, unknown] } }
+      responses:
+        '200': { description: Отфильтрованные карточки, content: { application/json: { schema: { $ref: '#/components/schemas/CatalogResult' } } } }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '503': { $ref: '#/components/responses/Unavailable' }
+  /api/v1/opportunities/{id}:
+    get:
+      summary: Получить опубликованную карточку, включая закрытую
+      security: [{ BearerAuth: [] }]
+      parameters:
+        - { in: path, name: id, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: Карточка и её текущий статус
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [catalog_version, profile_revision, ranking_version, evaluated_at, item]
+                properties:
+                  catalog_version: { type: string }
+                  profile_revision: { type: integer }
+                  ranking_version: { type: integer, const: 1 }
+                  evaluated_at: { type: string, format: date-time }
+                  item: { $ref: '#/components/schemas/RankedOpportunity' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '503': { $ref: '#/components/responses/Unavailable' }
+  /api/v1/me/favorites:
+    get:
+      summary: Получить избранное с состоянием closed/unavailable
+      security: [{ BearerAuth: [] }]
+      responses:
+        '200': { description: Избранное, content: { application/json: { schema: { $ref: '#/components/schemas/FavoritesResult' } } } }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '503': { $ref: '#/components/responses/Unavailable' }
+  /api/v1/me/favorites/{id}:
+    put:
+      summary: Идемпотентно добавить доступную карточку в избранное
+      security: [{ BearerAuth: [] }]
+      parameters:
+        - { in: path, name: id, required: true, schema: { type: string } }
+      responses:
+        '204': { description: Добавлена или уже была в избранном }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/Validation' }
+        '503': { $ref: '#/components/responses/Unavailable' }
+    delete:
+      summary: Идемпотентно удалить ID из избранного
+      security: [{ BearerAuth: [] }]
+      parameters:
+        - { in: path, name: id, required: true, schema: { type: string } }
+      responses:
+        '204': { description: ID удалён или отсутствовал }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '503': { $ref: '#/components/responses/Unavailable' }
+  /api/v1/me:
+    get:
+      summary: Получить активный профиль и состояние черновика
+      security: [{ BearerAuth: [] }]
+      responses:
+        '200':
+          description: Текущее состояние пользователя
+          content: { application/json: { schema: { $ref: '#/components/schemas/UserState' } } }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '503': { $ref: '#/components/responses/Unavailable' }
+  /api/v1/me/draft:
+    get:
+      summary: Получить черновик и его монотонную ревизию
+      security: [{ BearerAuth: [] }]
+      responses:
+        '200':
+          description: Черновик или null
+          content: { application/json: { schema: { $ref: '#/components/schemas/DraftResponse' } } }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '503': { $ref: '#/components/responses/Unavailable' }
+    put:
+      summary: Заменить текущий черновик при совпадении ревизии
+      description: Сервер вычисляет версии, question_ids и base_profile_revision. При смене направлений старые ответы исключаются.
+      security: [{ BearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [revision, draft]
+              properties:
+                revision: { type: integer, minimum: 0 }
+                draft: { $ref: '#/components/schemas/DraftInput' }
+      responses:
+        '200':
+          description: Сохранённый черновик и новая ревизия
+          content: { application/json: { schema: { $ref: '#/components/schemas/DraftResponse' } } }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '413': { $ref: '#/components/responses/TooLarge' }
+        '415': { $ref: '#/components/responses/UnsupportedMediaType' }
+        '422': { $ref: '#/components/responses/Validation' }
+        '503': { $ref: '#/components/responses/Unavailable' }
+    delete:
+      summary: Отменить редактирование с сохранением активного профиля
+      security: [{ BearerAuth: [] }]
+      responses:
+        '204': { description: Черновик удалён }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '503': { $ref: '#/components/responses/Unavailable' }
+  /api/v1/me/onboarding/complete:
+    post:
+      summary: Атомарно завершить опросник
+      description: Повтор того же draft_revision с тем же ключом за 24 часа возвращает тот же профиль.
+      security: [{ BearerAuth: [] }]
+      parameters:
+        - in: header
+          name: Idempotency-Key
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [draft_revision]
+              properties:
+                draft_revision: { type: integer, minimum: 1 }
+      responses:
+        '200':
+          description: Завершённый профиль
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [profile, revision]
+                properties:
+                  profile: { $ref: '#/components/schemas/Profile' }
+                  revision: { type: integer, minimum: 1 }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '413': { $ref: '#/components/responses/TooLarge' }
+        '415': { $ref: '#/components/responses/UnsupportedMediaType' }
+        '422': { $ref: '#/components/responses/Validation' }
+        '503': { $ref: '#/components/responses/Unavailable' }
+  /api/v1/me/data:
+    delete:
+      summary: Удалить аккаунт, документы и все сессии
+      security: [{ BearerAuth: [] }]
+      responses:
+        '204': { description: Данные удалены }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '503': { $ref: '#/components/responses/Unavailable' }
+  /api/v1/questionnaire:
+    get:
+      summary: Получить версии и варианты общих вопросов
+      security: [{ BearerAuth: [] }]
+      responses:
+        '200': { description: Направления, профили, шкала и варианты ответа, content: { application/json: { schema: { $ref: '#/components/schemas/Questionnaire' } } } }
+        '503': { $ref: '#/components/responses/Unavailable' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+  /api/v1/auth/max:
+    post:
+      summary: Обменять исходную строку MAX initData на сессию
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [init_data]
+              properties:
+                init_data:
+                  type: string
+                  minLength: 1
+                  maxLength: 16384
+      responses:
+        '200':
+          description: Сессия создана; ответ не кешируется
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [token, expires_at, user_id]
+                properties:
+                  token:
+                    type: string
+                    description: Opaque bearer-токен; хранить в памяти клиента
+                    minLength: 43
+                    maxLength: 43
+                  expires_at:
+                    type: string
+                    format: date-time
+                  user_id:
+                    type: string
+                    format: uuid
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '413': { $ref: '#/components/responses/TooLarge' }
+        '415': { $ref: '#/components/responses/UnsupportedMediaType' }
+        '503': { $ref: '#/components/responses/Unavailable' }
+  /api/v1/auth/session:
+    delete:
+      summary: Отозвать текущую сессию
+      security: [{ BearerAuth: [] }]
+      responses:
+        '204':
+          description: Сессия отозвана; тело отсутствует
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '503': { $ref: '#/components/responses/Unavailable' }
+  /api/v1/questionnaire/preview:
+    post:
+      summary: Получить детерминированный набор вопросов без сохранения
+      security: [{ BearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [directions]
+              properties:
+                directions:
+                  type: array
+                  minItems: 1
+                  maxItems: 3
+                  uniqueItems: true
+                  items:
+                    type: string
+                    enum: [backend, frontend, mobile, devops, ml, analytics, security, management, design, product]
+                profiles:
+                  type: object
+                  additionalProperties: false
+                  properties:
+                    mobile:
+                      type: string
+                      enum: [android, ios, flutter, mobile-all]
+                    management:
+                      type: string
+                      enum: [product, project, ba, management-all]
+      responses:
+        '200':
+          description: Набор вопросов и нормализованный выбор
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [questionnaire_version, selection_version, directions, question_count, questions]
+                properties:
+                  questionnaire_version: { type: string, const: max-v1 }
+                  selection_version: { type: integer, const: 1 }
+                  directions:
+                    type: array
+                    items: { type: string }
+                  profiles:
+                    type: object
+                    additionalProperties: { type: string }
+                  question_count: { type: integer, enum: [8, 12, 16] }
+                  questions:
+                    type: array
+                    items:
+                      type: object
+                      additionalProperties: false
+                      required: [id, direction_id, text]
+                      properties:
+                        id: { type: string }
+                        direction_id: { type: string }
+                        text: { type: string }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '413': { $ref: '#/components/responses/TooLarge' }
+        '415': { $ref: '#/components/responses/UnsupportedMediaType' }
+        '422': { $ref: '#/components/responses/Validation' }
+        '503': { $ref: '#/components/responses/Unavailable' }
+  /healthz:
+    get:
+      summary: Проверить, что процесс отвечает
+      responses:
+        '200':
+          description: Процесс работает
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [status]
+                properties:
+                  status: { type: string, const: ok }
+  /readyz:
+    get:
+      summary: Проверить БД, миграции и активный реальный каталог
+      responses:
+        '200':
+          description: Зависимости готовы
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [status]
+                properties:
+                  status: { type: string, const: ready }
+        '503':
+          description: БД, миграции или активный каталог недоступны
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [status]
+                properties:
+                  status: { type: string, const: not_ready }
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+  schemas:
+    Questionnaire:
+      type: object
+      additionalProperties: false
+      required: [questionnaire_version, selection_version, directions, profiles, answer_scale, goals, education_stages, preferred_formats, backend_languages, general_questions]
+      properties:
+        questionnaire_version: { type: string }
+        selection_version: { type: integer, const: 1 }
+        directions:
+          type: array
+          items:
+            type: object
+            required: [id, title, core_question_ids]
+            properties:
+              id: { type: string }
+              title: { type: string }
+              core_question_ids: { type: array, items: { type: string } }
+        profiles:
+          type: array
+          items:
+            type: object
+            required: [id, title, direction_id]
+            properties:
+              id: { type: string }
+              title: { type: string }
+              direction_id: { type: string }
+              question_ids: { type: array, items: { type: string } }
+              selection_rule: { type: string }
+        answer_scale:
+          type: array
+          items:
+            type: object
+            required: [value, label]
+            properties:
+              value: { type: [integer, 'null'], minimum: 0, maximum: 3 }
+              label: { type: string }
+        goals: { type: array, items: { type: string } }
+        education_stages: { type: array, items: { type: string } }
+        preferred_formats: { type: array, items: { type: string } }
+        backend_languages: { type: array, items: { type: string } }
+        general_questions:
+          type: array
+          items:
+            type: object
+            required: [id, text]
+            properties:
+              id: { type: string }
+              text: { type: string }
+    RankedOpportunity:
+      type: object
+      description: Публичная карточка и вычисленный статус; причины содержат не более двух кодов.
+      required: [id, type, organizer_id, title, summary, description, directions, format, cities, education_requirements, requirements_text, skill_requirements, no_prerequisites, details, starts_at, ends_at, deadline_at, source_url, action_url, checked_at, publication_status, availability, is_demo, effective_status, reasons]
+      properties:
+        id: { type: string }
+        type: { type: string, enum: [course, internship, event] }
+        title: { type: string }
+        summary: { type: string }
+        description: { type: string }
+        directions: { type: array, items: { type: string } }
+        format: { type: string, enum: [online, offline, hybrid, unknown] }
+        source_url: { type: string, format: uri }
+        action_url: { type: string, format: uri }
+        effective_status: { type: string, enum: [active, closed] }
+        organizer_id: { type: string }
+        specializations: { type: array, items: { type: string } }
+        fully_remote_allowed: { type: boolean }
+        cities: { type: [array, 'null'], items: { type: string } }
+        education_requirements:
+          oneOf:
+            - { type: 'null' }
+            - type: object
+              required: [basis]
+              properties:
+                stages: { type: array, items: { type: string } }
+                study_year_min: { type: integer, minimum: 1, maximum: 6 }
+                study_year_max: { type: integer, minimum: 1, maximum: 6 }
+                basis: { type: string }
+        requirements_text: { type: [string, 'null'] }
+        skill_requirements:
+          type: [array, 'null']
+          items:
+            type: object
+            required: [skill_id, min_experience, basis]
+            properties:
+              skill_id: { type: string }
+              min_experience: { type: integer, minimum: 0, maximum: 3 }
+              basis: { type: string }
+        no_prerequisites: { type: [boolean, 'null'] }
+        details:
+          type: object
+          properties:
+            course:
+              type: object
+              properties:
+                price_text: { type: string }
+                duration_text: { type: string }
+            internship:
+              type: object
+              properties:
+                compensation_text: { type: string }
+                duration_text: { type: string }
+            event:
+              type: object
+              properties:
+                venue: { type: string }
+                registration_text: { type: string }
+        starts_at: { type: [string, 'null'], format: date-time }
+        ends_at: { type: [string, 'null'], format: date-time }
+        deadline_at: { type: [string, 'null'], format: date-time }
+        checked_at: { type: string, format: date-time }
+        publication_status: { type: string, enum: [draft, published, archived] }
+        availability: { type: string, enum: [open, closed, unknown] }
+        is_demo: { type: boolean, const: false }
+        availability_hint: { type: string, enum: [check_source] }
+        reasons:
+          type: array
+          maxItems: 2
+          items:
+            type: object
+            required: [code]
+            properties:
+              code: { type: string, enum: [direction_match, goal_match, no_prerequisites, requirements_unknown] }
+              ref_id: { type: string }
+    CatalogResult:
+      type: object
+      additionalProperties: false
+      required: [catalog_version, profile_revision, ranking_version, evaluated_at, has_direction_matches, items]
+      properties:
+        catalog_version: { type: string }
+        profile_revision: { type: integer, minimum: 1 }
+        ranking_version: { type: integer, const: 1 }
+        evaluated_at: { type: string, format: date-time }
+        has_direction_matches: { type: boolean }
+        items:
+          type: array
+          maxItems: 500
+          items: { $ref: '#/components/schemas/RankedOpportunity' }
+    FavoritesResult:
+      type: object
+      additionalProperties: false
+      required: [catalog_version, profile_revision, favorites_revision, evaluated_at, items]
+      properties:
+        catalog_version: { type: string }
+        profile_revision: { type: integer, minimum: 1 }
+        favorites_revision: { type: integer, minimum: 0 }
+        evaluated_at: { type: string, format: date-time }
+        items:
+          type: array
+          maxItems: 500
+          items:
+            type: object
+            required: [id, effective_status, item]
+            properties:
+              id: { type: string }
+              effective_status: { type: string, enum: [active, closed, unavailable] }
+              item:
+                oneOf:
+                  - { $ref: '#/components/schemas/RankedOpportunity' }
+                  - { type: 'null' }
+    DraftInput:
+      type: object
+      additionalProperties: false
+      required: [current_step, directions]
+      properties:
+        current_step: { type: integer, minimum: 1, maximum: 64 }
+        directions:
+          type: array
+          maxItems: 3
+          items: { type: string }
+        profiles:
+          type: object
+          additionalProperties: { type: string }
+        goals:
+          type: array
+          uniqueItems: true
+          items: { type: string, enum: [course, internship, event, explore] }
+        education_stage:
+          type: string
+          enum: [vocational, undergraduate, graduate, alumni, other, prefer_not_to_say]
+        study_year: { type: integer, minimum: 1, maximum: 6 }
+        preferred_format: { type: string, enum: [online, offline, both] }
+        preferred_cities:
+          type: array
+          maxItems: 20
+          uniqueItems: true
+          items: { type: string, maxLength: 80 }
+        any_city: { type: boolean }
+        other_city: { type: string, maxLength: 80 }
+        backend_languages:
+          type: array
+          uniqueItems: true
+          items: { type: string }
+        skills:
+          type: object
+          additionalProperties:
+            oneOf:
+              - { type: integer, minimum: 0, maximum: 3 }
+              - { type: 'null' }
+    Profile:
+      type: object
+      additionalProperties: false
+      description: Завершённые ответы и вычисленные сервером версии; даты в RFC 3339.
+      required: [schema_version, questionnaire_version, selection_version, directions, question_ids, goals, education_stage, preferred_format, skills, completed_at]
+      properties:
+        schema_version: { type: integer, const: 1 }
+        questionnaire_version: { type: string }
+        selection_version: { type: integer, const: 1 }
+        question_ids: { type: array, items: { type: string } }
+        directions:
+          type: array
+          maxItems: 3
+          items: { type: string }
+        profiles:
+          type: object
+          additionalProperties: { type: string }
+        goals:
+          type: array
+          uniqueItems: true
+          items: { type: string, enum: [course, internship, event, explore] }
+        education_stage:
+          type: string
+          enum: [vocational, undergraduate, graduate, alumni, other, prefer_not_to_say]
+        study_year: { type: integer, minimum: 1, maximum: 6 }
+        preferred_format: { type: string, enum: [online, offline, both] }
+        preferred_cities:
+          type: array
+          maxItems: 20
+          uniqueItems: true
+          items: { type: string, maxLength: 80 }
+        any_city: { type: boolean }
+        other_city: { type: string, maxLength: 80 }
+        backend_languages:
+          type: array
+          uniqueItems: true
+          items: { type: string }
+        skills:
+          type: object
+          additionalProperties:
+            oneOf:
+              - { type: integer, minimum: 0, maximum: 3 }
+              - { type: 'null' }
+        completed_at: { type: string, format: date-time }
+    SavedDraft:
+      type: object
+      additionalProperties: false
+      description: Частичные ответы и серверные поля. base_profile_revision=0 может отсутствовать.
+      required: [schema_version, questionnaire_version, selection_version, directions, question_ids, current_step]
+      properties:
+        schema_version: { type: integer, const: 1 }
+        questionnaire_version: { type: string }
+        selection_version: { type: integer, const: 1 }
+        question_ids: { type: array, items: { type: string } }
+        directions:
+          type: array
+          maxItems: 3
+          items: { type: string }
+        profiles:
+          type: object
+          additionalProperties: { type: string }
+        goals:
+          type: array
+          uniqueItems: true
+          items: { type: string, enum: [course, internship, event, explore] }
+        education_stage:
+          type: string
+          enum: [vocational, undergraduate, graduate, alumni, other, prefer_not_to_say]
+        study_year: { type: integer, minimum: 1, maximum: 6 }
+        preferred_format: { type: string, enum: [online, offline, both] }
+        preferred_cities:
+          type: array
+          maxItems: 20
+          uniqueItems: true
+          items: { type: string, maxLength: 80 }
+        any_city: { type: boolean }
+        other_city: { type: string, maxLength: 80 }
+        backend_languages:
+          type: array
+          uniqueItems: true
+          items: { type: string }
+        skills:
+          type: object
+          additionalProperties:
+            oneOf:
+              - { type: integer, minimum: 0, maximum: 3 }
+              - { type: 'null' }
+        current_step: { type: integer, minimum: 1, maximum: 64 }
+        base_profile_revision: { type: integer, minimum: 0 }
+    DraftResponse:
+      type: object
+      additionalProperties: false
+      required: [draft, revision]
+      properties:
+        draft:
+          oneOf:
+            - { $ref: '#/components/schemas/SavedDraft' }
+            - { type: 'null' }
+        revision: { type: integer, minimum: 0 }
+    UserState:
+      type: object
+      additionalProperties: false
+      required: [profile, profile_revision, draft, draft_revision]
+      properties:
+        profile:
+          oneOf:
+            - { $ref: '#/components/schemas/Profile' }
+            - { type: 'null' }
+        profile_revision: { type: integer, minimum: 0 }
+        draft:
+          oneOf:
+            - { $ref: '#/components/schemas/SavedDraft' }
+            - { type: 'null' }
+        draft_revision: { type: integer, minimum: 0 }
+    Error:
+      type: object
+      additionalProperties: false
+      required: [error]
+      properties:
+        error:
+          type: object
+          additionalProperties: false
+          required: [code, message, request_id]
+          properties:
+            code: { type: string }
+            message: { type: string }
+            fields:
+              type: object
+              additionalProperties: { type: string }
+            request_id: { type: string }
+  responses:
+    NotFound:
+      description: Карточка отсутствует или не опубликована
+      content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+    Conflict:
+      description: Ревизия или идемпотентный ключ конфликтуют
+      content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+    BadRequest:
+      description: Некорректный JSON
+      content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+    Unauthorized:
+      description: Некорректная или истёкшая авторизация
+      content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+    TooLarge:
+      description: Превышен лимит тела
+      content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+    UnsupportedMediaType:
+      description: Требуется application/json
+      content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+    Validation:
+      description: Неверный выбор направлений или профилей
+      content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+    Unavailable:
+      description: Хранилище недоступно
+      content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }

@@ -1,0 +1,14 @@
+# Use with: docker compose -f compose.yaml -f deploy/compose.production.yaml up --build -d
+services:
+  api:
+    environment:
+      APP_ENV: production
+      PUBLIC_ORIGIN: "https://${PUBLIC_DOMAIN:?Set PUBLIC_DOMAIN in .env}"
+      MAX_WORKER_ENABLED: "1"
+      MAX_APP_BOT_USERNAME: "${MAX_APP_BOT_USERNAME:?Set MAX_APP_BOT_USERNAME in .env}"
+  proxy:
+    environment:
+      SITE_ADDRESS: "${PUBLIC_DOMAIN:?Set PUBLIC_DOMAIN in .env}"
+    ports:
+      - "80:80"
+      - "443:443"

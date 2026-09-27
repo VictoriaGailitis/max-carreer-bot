@@ -1,0 +1,12 @@
+{$SITE_ADDRESS} {
+	encode zstd gzip
+	@backend path /api/v1/* /healthz /readyz
+	handle @backend {
+		reverse_proxy api:8081
+	}
+	handle {
+		root * /srv/frontend
+		try_files {path} /index.html
+		file_server
+	}
+}

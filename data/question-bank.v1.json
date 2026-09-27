@@ -1,0 +1,1232 @@
+{
+  "schema_version": 1,
+  "questionnaire_version": "max-v1",
+  "status": "runtime_bank_v1",
+  "source": {
+    "sha256": "8b921d3a8a89f5902eec432a4fc13eb3a6d121680631114c93bb528f8250d3b4",
+    "extraction": "IDs and question texts preserved; habits, materials, visual metadata and legacy scores excluded"
+  },
+  "answer_scale": [
+    {
+      "value": 0,
+      "label": "Пока не пробовал"
+    },
+    {
+      "value": 1,
+      "label": "Делал по инструкции или с помощью"
+    },
+    {
+      "value": 2,
+      "label": "Делал самостоятельно"
+    },
+    {
+      "value": 3,
+      "label": "Применял в проекте и могу объяснить своё решение"
+    },
+    {
+      "value": null,
+      "label": "Не могу оценить"
+    }
+  ],
+  "directions": [
+    {
+      "id": "backend",
+      "title": "Бэкенд-разработка",
+      "core_question_ids": [
+        "BACK-01",
+        "BACK-02",
+        "BACK-03",
+        "BACK-04",
+        "BACK-05",
+        "BACK-06",
+        "BACK-07",
+        "BACK-08",
+        "BACK-09",
+        "BACK-10",
+        "BACK-11",
+        "BACK-12"
+      ]
+    },
+    {
+      "id": "frontend",
+      "title": "Фронтенд-разработка",
+      "core_question_ids": [
+        "FRONT-01",
+        "FRONT-02",
+        "FRONT-03",
+        "FRONT-04",
+        "FRONT-05",
+        "FRONT-06",
+        "FRONT-07",
+        "FRONT-08",
+        "FRONT-09",
+        "FRONT-10",
+        "FRONT-11",
+        "FRONT-12"
+      ]
+    },
+    {
+      "id": "mobile",
+      "title": "Мобильная разработка",
+      "core_question_ids": [
+        "MOBILE-01",
+        "MOBILE-02",
+        "MOBILE-03",
+        "MOBILE-04",
+        "MOBILE-05",
+        "MOBILE-06",
+        "MOBILE-07",
+        "MOBILE-08",
+        "MOBILE-09",
+        "MOBILE-10",
+        "MOBILE-11",
+        "MOBILE-12"
+      ]
+    },
+    {
+      "id": "devops",
+      "title": "DevOps",
+      "core_question_ids": [
+        "DEVOPS-01",
+        "DEVOPS-02",
+        "DEVOPS-03",
+        "DEVOPS-04",
+        "DEVOPS-05",
+        "DEVOPS-06",
+        "DEVOPS-07",
+        "DEVOPS-08",
+        "DEVOPS-09",
+        "DEVOPS-10",
+        "DEVOPS-11",
+        "DEVOPS-12"
+      ]
+    },
+    {
+      "id": "ml",
+      "title": "Машинное обучение",
+      "core_question_ids": [
+        "ML-01",
+        "ML-02",
+        "ML-03",
+        "ML-04",
+        "ML-05",
+        "ML-06",
+        "ML-07",
+        "ML-08",
+        "ML-09",
+        "ML-10",
+        "ML-11",
+        "ML-12"
+      ]
+    },
+    {
+      "id": "analytics",
+      "title": "Аналитика данных",
+      "core_question_ids": [
+        "DATA-01",
+        "DATA-02",
+        "DATA-03",
+        "DATA-04",
+        "DATA-05",
+        "DATA-06",
+        "DATA-07",
+        "DATA-08",
+        "DATA-09",
+        "DATA-10"
+      ]
+    },
+    {
+      "id": "security",
+      "title": "Информационная безопасность",
+      "core_question_ids": [
+        "SEC-01",
+        "SEC-02",
+        "SEC-03",
+        "SEC-04",
+        "SEC-05",
+        "SEC-06",
+        "SEC-07",
+        "SEC-08",
+        "SEC-09",
+        "SEC-10",
+        "SEC-11",
+        "SEC-12"
+      ]
+    },
+    {
+      "id": "management",
+      "title": "Менеджмент",
+      "core_question_ids": [
+        "PRODUCT-01",
+        "PRODUCT-02",
+        "PRODUCT-03",
+        "PRODUCT-04",
+        "PRODUCT-05",
+        "PRODUCT-06",
+        "PRODUCT-07",
+        "PRODUCT-08"
+      ]
+    },
+    {
+      "id": "design",
+      "title": "Дизайн",
+      "core_question_ids": [
+        "DESIGN-01",
+        "DESIGN-02",
+        "DESIGN-03",
+        "DESIGN-04",
+        "DESIGN-05",
+        "DESIGN-06",
+        "DESIGN-07",
+        "DESIGN-08"
+      ]
+    }
+  ],
+  "direction_aliases": {
+    "product": {
+      "direction_id": "management",
+      "profile_id": "product"
+    }
+  },
+  "profiles": [
+    {
+      "id": "android",
+      "title": "Android",
+      "direction_id": "mobile",
+      "question_ids": [
+        "ANDROID-01",
+        "ANDROID-02",
+        "ANDROID-03",
+        "ANDROID-04"
+      ]
+    },
+    {
+      "id": "ios",
+      "title": "iOS",
+      "direction_id": "mobile",
+      "question_ids": [
+        "IOS-01",
+        "IOS-02",
+        "IOS-03",
+        "IOS-04"
+      ]
+    },
+    {
+      "id": "flutter",
+      "title": "Flutter",
+      "direction_id": "mobile",
+      "question_ids": [
+        "FLUTTER-01",
+        "FLUTTER-02",
+        "FLUTTER-03",
+        "FLUTTER-04"
+      ]
+    },
+    {
+      "id": "project",
+      "title": "Проектный менеджмент",
+      "direction_id": "management",
+      "question_ids": [
+        "PROJECT-01",
+        "PROJECT-02",
+        "PROJECT-03",
+        "PROJECT-04",
+        "PROJECT-05",
+        "PROJECT-06",
+        "PROJECT-07",
+        "PROJECT-08"
+      ]
+    },
+    {
+      "id": "ba",
+      "title": "Бизнес-анализ",
+      "direction_id": "management",
+      "question_ids": [
+        "BA-01",
+        "BA-02",
+        "BA-03",
+        "BA-04",
+        "BA-05",
+        "BA-06",
+        "BA-07",
+        "BA-08"
+      ]
+    },
+    {
+      "id": "product",
+      "title": "Продуктовый менеджмент",
+      "direction_id": "management",
+      "question_ids": [
+        "PRODUCT-01",
+        "PRODUCT-02",
+        "PRODUCT-03",
+        "PRODUCT-04",
+        "PRODUCT-05",
+        "PRODUCT-06",
+        "PRODUCT-07",
+        "PRODUCT-08"
+      ]
+    },
+    {
+      "id": "mobile-all",
+      "title": "Мобильная разработка: пока без специализации",
+      "direction_id": "mobile",
+      "question_ids": [
+        "MOBILE-01",
+        "MOBILE-02",
+        "MOBILE-03",
+        "MOBILE-04",
+        "MOBILE-05",
+        "MOBILE-06",
+        "MOBILE-07",
+        "MOBILE-08",
+        "MOBILE-09",
+        "MOBILE-10",
+        "MOBILE-11",
+        "MOBILE-12"
+      ]
+    },
+    {
+      "id": "management-all",
+      "title": "Менеджмент: пока без специализации",
+      "direction_id": "management",
+      "selection_rule": "legacy_mixed_management"
+    }
+  ],
+  "questions": [
+    {
+      "id": "BACK-01",
+      "text": "Могу выбрать подходящую структуру данных для задачи",
+      "direction_id": "backend",
+      "profile_id": null,
+      "kind": "self_assessment"
+    },
+    {
+      "id": "BACK-02",
+      "text": "Могу написать небольшую серверную программу на знакомом языке",
+      "direction_id": "backend",
+      "profile_id": null,
+      "kind": "self_assessment"
+    },
+    {
+      "id": "BACK-03",
+      "text": "Могу спроектировать HTTP API: адреса, методы и коды ответа",
+      "direction_id": "backend",
+      "profile_id": null,
+      "kind": "self_assessment"
+    },
+    {
+      "id": "BACK-04",
+      "text": "Могу объяснить основы HTTP, DNS и клиент-серверного взаимодействия",
+      "direction_id": "backend",
+      "profile_id": null,
+      "kind": "self_assessment"
+    },
+    {
+      "id": "BACK-05",
+      "text": "Могу спроектировать таблицы и связи реляционной базы",
+      "direction_id": "backend",
+      "profile_id": null,
+      "kind": "self_assessment"
+    },
+    {
+      "id": "BACK-06",
+      "text": "Могу написать SQL с фильтрацией, группировкой и JOIN",
+      "direction_id": "backend",
+      "profile_id": null,
+      "kind": "self_assessment"
+    },
+    {
+      "id": "BACK-07",
+      "text": "Могу написать тесты и проверить пограничные случаи",
+      "direction_id": "backend",
+      "profile_id": null,
+      "kind": "self_assessment"
+    },
+    {
+      "id": "BACK-08",
+      "text": "Могу запустить сервис с конфигурацией и проверить его по логам",
+      "direction_id": "backend",
+      "profile_id": null,
+      "kind": "self_assessment"
+    },
+    {
+      "id": "BACK-09",
+      "text": "Могу объяснить, как индексы ускоряют запросы и когда мешают записи",
+      "direction_id": "backend",
+      "profile_id": null,
+      "kind": "self_assessment"
+    },
+    {
+      "id": "BACK-10",
+      "text": "Могу объяснить транзакции и уровни изоляции на практическом примере",
+      "direction_id": "backend",
+      "profile_id": null,
+      "kind": "self_assessment"
+    },
+    {
+      "id": "BACK-11",
+      "text": "Могу найти узкое место сервиса с помощью измерений и профилирования",
+      "direction_id": "backend",
+      "profile_id": null,
+      "kind": "self_assessment"
+    },
+    {
+      "id": "BACK-12",
+      "text": "Могу объяснить конкурентный доступ и выбрать способ синхронизации",
+      "direction_id": "backend",
+      "profile_id": null,
+      "kind": "self_assessment"
+    },
+    {
+      "id": "FRONT-01",
+      "text": "Могу сверстать адаптивную страницу на HTML и CSS",
+      "direction_id": "frontend",
+      "profile_id": null,
+      "kind": "self_assessment"
+    },
+    {
+      "id": "FRONT-02",
+      "text": "Могу объяснить типы данных, функции, области видимости и замыкания JavaScript",
+      "direction_id": "frontend",
+      "profile_id": null,
+      "kind": "self_assessment"
+    },
+    {
+      "id": "FRONT-03",
+      "text": "Могу работать с Promise, async/await и обработкой ошибок",
+      "direction_id": "frontend",
+      "profile_id": null,
+      "kind": "self_assessment"
+    },
+    {
+      "id": "FRONT-04",
+      "text": "Могу получить данные из API и показать загрузку, результат и ошибку",
+      "direction_id": "frontend",
+      "profile_id": null,
+      "kind": "self_assessment"
+    },
+    {
+      "id": "FRONT-05",
+      "text": "Могу использовать TypeScript для описания данных и компонентов",
+      "direction_id": "frontend",
+      "profile_id": null,
+      "kind": "self_assessment"
+    },
+    {
+      "id": "FRONT-06",
+      "text": "Могу создавать React-компоненты, передавать данные через props, обрабатывать события и управлять локальным состоянием",
+      "direction_id": "frontend",
+      "profile_id": null,
+      "kind": "self_assessment"
+    },
+    {
+      "id": "FRONT-07",
+      "text": "Могу обеспечить управление с клавиатуры, корректный фокус, подписи элементов и достаточный контраст",
+      "direction_id": "frontend",
+      "profile_id": null,
+      "kind": "self_assessment"
+    },
+    {
+      "id": "FRONT-08",
+      "text": "Могу написать тест для компонента или пользовательского сценария",
+      "direction_id": "frontend",
+      "profile_id": null,
+      "kind": "self_assessment"
+    },
+    {
+      "id": "FRONT-09",
+      "text": "Могу найти причину лишних перерисовок и замедления страницы",
+      "direction_id": "frontend",
+      "profile_id": null,
+      "kind": "self_assessment"
+    },
+    {
+      "id": "FRONT-10",
+      "text": "Могу объяснить, когда нужен SSR и какие у него ограничения",
+      "direction_id": "frontend",
+      "profile_id": null,
+      "kind": "self_assessment"
+    },
+    {
+      "id": "FRONT-11",
+      "text": "Могу отладить проблему в браузерных DevTools",
+      "direction_id": "frontend",
+      "profile_id": null,
+      "kind": "self_assessment"
+    },
+    {
+      "id": "FRONT-12",
+      "text": "Могу собрать и показать законченный интерфейсный проект",
+      "direction_id": "frontend",
+      "profile_id": null,
+      "kind": "self_assessment"
+    },
+    {
+      "id": "MOBILE-01",
+      "text": "Могу объяснить жизненный цикл приложения и его экранов",
+      "direction_id": "mobile",
+      "profile_id": null,
+      "kind": "self_assessment"
+    },
+    {
+      "id": "MOBILE-02",
+      "text": "Могу собрать экран и связать его с состоянием",
+      "direction_id": "mobile",
+      "profile_id": null,
+      "kind": "self_assessment"
+    },
+    {
+      "id": "MOBILE-03",
+      "text": "Могу загрузить данные из API и обработать отсутствие сети",
+      "direction_id": "mobile",
+      "profile_id": null,
+      "kind": "self_assessment"
+    },
+    {
+      "id": "MOBILE-04",
+      "text": "Могу вынести долгую операцию из главного потока",
+      "direction_id": "mobile",
+      "profile_id": null,
+      "kind": "self_assessment"
+    },
+    {
+      "id": "MOBILE-05",
+      "text": "Могу безопасно сохранить данные локально",
+      "direction_id": "mobile",
+      "profile_id": null,
+      "kind": "self_assessment"
+    },
+    {
+      "id": "MOBILE-06",
+      "text": "Могу объяснить архитектуру и разделение ответственности",
+      "direction_id": "mobile",
+      "profile_id": null,
+      "kind": "self_assessment"
+    },
+    {
+      "id": "MOBILE-07",
+      "text": "Могу найти проблему по логам и инструментам профилирования",
+      "direction_id": "mobile",
+      "profile_id": null,
+      "kind": "self_assessment"
+    },
+    {
+      "id": "MOBILE-08",
+      "text": "Могу собрать приложение, которое можно установить и пройти",
+      "direction_id": "mobile",
+      "profile_id": null,
+      "kind": "self_assessment"
+    },
+    {
+      "id": "MOBILE-09",
+      "text": "Могу настроить навигацию и передачу данных между экранами",
+      "direction_id": "mobile",
+      "profile_id": null,
+      "kind": "self_assessment"
+    },
+    {
+      "id": "MOBILE-10",
+      "text": "Могу написать unit- или UI-тест мобильного сценария",
+      "direction_id": "mobile",
+      "profile_id": null,
+      "kind": "self_assessment"
+    },
+    {
+      "id": "MOBILE-11",
+      "text": "Могу объяснить причины утечек памяти и способы их поиска",
+      "direction_id": "mobile",
+      "profile_id": null,
+      "kind": "self_assessment"
+    },
+    {
+      "id": "MOBILE-12",
+      "text": "Могу подготовить сборку приложения для публикации или тестирования",
+      "direction_id": "mobile",
+      "profile_id": null,
+      "kind": "self_assessment"
+    },
+    {
+      "id": "DEVOPS-01",
+      "text": "Могу работать с файлами, правами, процессами и сервисами Linux",
+      "direction_id": "devops",
+      "profile_id": null,
+      "kind": "self_assessment"
+    },
+    {
+      "id": "DEVOPS-02",
+      "text": "Могу автоматизировать операцию на Bash, Python или Go",
+      "direction_id": "devops",
+      "profile_id": null,
+      "kind": "self_assessment"
+    },
+    {
+      "id": "DEVOPS-03",
+      "text": "Могу локализовать проблему на уровне DNS, TCP или HTTP",
+      "direction_id": "devops",
+      "profile_id": null,
+      "kind": "self_assessment"
+    },
+    {
+      "id": "DEVOPS-04",
+      "text": "Могу диагностировать проблему по метрикам и логам",
+      "direction_id": "devops",
+      "profile_id": null,
+      "kind": "self_assessment"
+    },
+    {
+      "id": "DEVOPS-05",
+      "text": "Могу собрать Docker-образ и запустить сервис, а также знаю, что такое контейнеризация",
+      "direction_id": "devops",
+      "profile_id": null,
+      "kind": "self_assessment"
+    },
+    {
+      "id": "DEVOPS-06",
+      "text": "Могу объяснить основные сущности Kubernetes",
+      "direction_id": "devops",
+      "profile_id": null,
+      "kind": "self_assessment"
+    },
+    {
+      "id": "DEVOPS-07",
+      "text": "Могу объяснить CI/CD-процесс от коммита до развёртывания",
+      "direction_id": "devops",
+      "profile_id": null,
+      "kind": "self_assessment"
+    },
+    {
+      "id": "DEVOPS-08",
+      "text": "Могу развернуть сервис и восстановить его после сбоя",
+      "direction_id": "devops",
+      "profile_id": null,
+      "kind": "self_assessment"
+    },
+    {
+      "id": "DEVOPS-09",
+      "text": "Могу описать инфраструктуру как код (IaC) и безопасно применить изменение",
+      "direction_id": "devops",
+      "profile_id": null,
+      "kind": "self_assessment"
+    },
+    {
+      "id": "DEVOPS-10",
+      "text": "Могу настроить полезный алерт на основе метрики сервиса",
+      "direction_id": "devops",
+      "profile_id": null,
+      "kind": "self_assessment"
+    },
+    {
+      "id": "DEVOPS-11",
+      "text": "Могу объяснить отказоустойчивость и устранение единой точки отказа",
+      "direction_id": "devops",
+      "profile_id": null,
+      "kind": "self_assessment"
+    },
+    {
+      "id": "DEVOPS-12",
+      "text": "Могу управлять конфигурацией и секретами между окружениями",
+      "direction_id": "devops",
+      "profile_id": null,
+      "kind": "self_assessment"
+    },
+    {
+      "id": "ML-01",
+      "text": "Могу использовать Python или C++ для решения задач машинного обучения",
+      "direction_id": "ml",
+      "profile_id": null,
+      "kind": "self_assessment"
+    },
+    {
+      "id": "ML-02",
+      "text": "Могу решить базовую задачу по вероятности и статистике",
+      "direction_id": "ml",
+      "profile_id": null,
+      "kind": "self_assessment"
+    },
+    {
+      "id": "ML-03",
+      "text": "Могу очистить данные, преобразовать признаки и разделить выборку",
+      "direction_id": "ml",
+      "profile_id": null,
+      "kind": "self_assessment"
+    },
+    {
+      "id": "ML-04",
+      "text": "Могу объяснить базовые алгоритмы обучения с учителем и без учителя",
+      "direction_id": "ml",
+      "profile_id": null,
+      "kind": "self_assessment"
+    },
+    {
+      "id": "ML-05",
+      "text": "Могу объяснить переобучение, регуляризацию, кросс-валидацию и утечку данных",
+      "direction_id": "ml",
+      "profile_id": null,
+      "kind": "self_assessment"
+    },
+    {
+      "id": "ML-06",
+      "text": "Могу выбрать метрику качества под задачу",
+      "direction_id": "ml",
+      "profile_id": null,
+      "kind": "self_assessment"
+    },
+    {
+      "id": "ML-07",
+      "text": "Могу анализировать ошибки модели",
+      "direction_id": "ml",
+      "profile_id": null,
+      "kind": "self_assessment"
+    },
+    {
+      "id": "ML-08",
+      "text": "Могу воспроизвести и объяснить собственный ML-эксперимент",
+      "direction_id": "ml",
+      "profile_id": null,
+      "kind": "self_assessment"
+    },
+    {
+      "id": "ML-09",
+      "text": "Могу объяснить роль производной и градиента в обучении модели",
+      "direction_id": "ml",
+      "profile_id": null,
+      "kind": "self_assessment"
+    },
+    {
+      "id": "ML-10",
+      "text": "Могу выполнить базовые операции линейной алгебры для ML-задачи",
+      "direction_id": "ml",
+      "profile_id": null,
+      "kind": "self_assessment"
+    },
+    {
+      "id": "ML-11",
+      "text": "Могу собрать и обучить небольшую нейронную сеть во фреймворке",
+      "direction_id": "ml",
+      "profile_id": null,
+      "kind": "self_assessment"
+    },
+    {
+      "id": "ML-12",
+      "text": "Могу оформить ML-проект так, чтобы другой человек воспроизвёл результат",
+      "direction_id": "ml",
+      "profile_id": null,
+      "kind": "self_assessment"
+    },
+    {
+      "id": "DATA-01",
+      "text": "Могу написать SQL с JOIN, GROUP BY, CASE и подзапросами",
+      "direction_id": "analytics",
+      "profile_id": null,
+      "kind": "self_assessment"
+    },
+    {
+      "id": "DATA-02",
+      "text": "Могу загрузить, очистить и преобразовать данные в Python",
+      "direction_id": "analytics",
+      "profile_id": null,
+      "kind": "self_assessment"
+    },
+    {
+      "id": "DATA-03",
+      "text": "Могу применить основные понятия математической статистики",
+      "direction_id": "analytics",
+      "profile_id": null,
+      "kind": "self_assessment"
+    },
+    {
+      "id": "DATA-04",
+      "text": "Могу объяснить гипотезу, p-value и ошибки первого и второго рода",
+      "direction_id": "analytics",
+      "profile_id": null,
+      "kind": "self_assessment"
+    },
+    {
+      "id": "DATA-05",
+      "text": "Могу спроектировать A/B-тест",
+      "direction_id": "analytics",
+      "profile_id": null,
+      "kind": "self_assessment"
+    },
+    {
+      "id": "DATA-06",
+      "text": "Могу выбрать продуктовую метрику и заметить её ограничения",
+      "direction_id": "analytics",
+      "profile_id": null,
+      "kind": "self_assessment"
+    },
+    {
+      "id": "DATA-07",
+      "text": "Могу использовать CTE и оконные функции в SQL",
+      "direction_id": "analytics",
+      "profile_id": null,
+      "kind": "self_assessment"
+    },
+    {
+      "id": "DATA-08",
+      "text": "Могу визуализировать вывод",
+      "direction_id": "analytics",
+      "profile_id": null,
+      "kind": "self_assessment"
+    },
+    {
+      "id": "DATA-09",
+      "text": "Могу проверить данные на пропуски, дубликаты и аномалии",
+      "direction_id": "analytics",
+      "profile_id": null,
+      "kind": "self_assessment"
+    },
+    {
+      "id": "DATA-10",
+      "text": "Могу разобрать аналитический кейс от вопроса до рекомендации",
+      "direction_id": "analytics",
+      "profile_id": null,
+      "kind": "self_assessment"
+    },
+    {
+      "id": "SEC-01",
+      "text": "Могу объяснить основные сетевые протоколы и взаимодействие сервисов",
+      "direction_id": "security",
+      "profile_id": null,
+      "kind": "self_assessment"
+    },
+    {
+      "id": "SEC-02",
+      "text": "Могу выполнять базовые задачи администрирования Linux",
+      "direction_id": "security",
+      "profile_id": null,
+      "kind": "self_assessment"
+    },
+    {
+      "id": "SEC-03",
+      "text": "Могу объяснить категории OWASP Top 10 и рассказать, как работают основные веб-атаки (XSS, SQLi, CSRF)",
+      "direction_id": "security",
+      "profile_id": null,
+      "kind": "self_assessment"
+    },
+    {
+      "id": "SEC-04",
+      "text": "Могу найти потенциальную уязвимость и предложить исправление",
+      "direction_id": "security",
+      "profile_id": null,
+      "kind": "self_assessment"
+    },
+    {
+      "id": "SEC-05",
+      "text": "Могу объяснить аутентификацию, авторизацию и контроль доступа",
+      "direction_id": "security",
+      "profile_id": null,
+      "kind": "self_assessment"
+    },
+    {
+      "id": "SEC-06",
+      "text": "Могу найти подозрительную активность в логах",
+      "direction_id": "security",
+      "profile_id": null,
+      "kind": "self_assessment"
+    },
+    {
+      "id": "SEC-07",
+      "text": "Могу составить базовую модель угроз",
+      "direction_id": "security",
+      "profile_id": null,
+      "kind": "self_assessment"
+    },
+    {
+      "id": "SEC-08",
+      "text": "Могу решить учебную задачу CTF или разобрать уязвимость",
+      "direction_id": "security",
+      "profile_id": null,
+      "kind": "self_assessment"
+    },
+    {
+      "id": "SEC-09",
+      "text": "Могу написать небольшой Python- или Go-скрипт для задачи безопасности",
+      "direction_id": "security",
+      "profile_id": null,
+      "kind": "self_assessment"
+    },
+    {
+      "id": "SEC-10",
+      "text": "Могу объяснить разницу между хешированием, шифрованием и цифровой подписью и знаю, где что применяется",
+      "direction_id": "security",
+      "profile_id": null,
+      "kind": "self_assessment"
+    },
+    {
+      "id": "SEC-11",
+      "text": "Могу провести базовую проверку настроек облачного сервиса и предложить меры по его укреплению",
+      "direction_id": "security",
+      "profile_id": null,
+      "kind": "self_assessment"
+    },
+    {
+      "id": "SEC-12",
+      "text": "Могу провести security review небольшого технического решения",
+      "direction_id": "security",
+      "profile_id": null,
+      "kind": "self_assessment"
+    },
+    {
+      "id": "PRODUCT-01",
+      "text": "Могу сформулировать проблему пользователя, не подменяя её решением",
+      "direction_id": "management",
+      "profile_id": null,
+      "kind": "self_assessment"
+    },
+    {
+      "id": "PRODUCT-02",
+      "text": "Могу предложить и приоритизировать продуктовые гипотезы",
+      "direction_id": "management",
+      "profile_id": null,
+      "kind": "self_assessment"
+    },
+    {
+      "id": "PRODUCT-03",
+      "text": "Могу объяснить retention, конверсию, воронку и unit-экономику",
+      "direction_id": "management",
+      "profile_id": null,
+      "kind": "self_assessment"
+    },
+    {
+      "id": "PRODUCT-04",
+      "text": "Могу выбрать метрику успеха и защитные метрики",
+      "direction_id": "management",
+      "profile_id": null,
+      "kind": "self_assessment"
+    },
+    {
+      "id": "PRODUCT-05",
+      "text": "Могу описать MVP и объяснить, что не войдёт в первую версию",
+      "direction_id": "management",
+      "profile_id": null,
+      "kind": "self_assessment"
+    },
+    {
+      "id": "PRODUCT-06",
+      "text": "Могу описать пользовательский сценарий и найти узкое место",
+      "direction_id": "management",
+      "profile_id": null,
+      "kind": "self_assessment"
+    },
+    {
+      "id": "PRODUCT-07",
+      "text": "Могу подготовить проверку продуктовой гипотезы",
+      "direction_id": "management",
+      "profile_id": null,
+      "kind": "self_assessment"
+    },
+    {
+      "id": "PRODUCT-08",
+      "text": "Могу аргументировать решение данными и ограничениями",
+      "direction_id": "management",
+      "profile_id": null,
+      "kind": "self_assessment"
+    },
+    {
+      "id": "DESIGN-01",
+      "text": "Могу выяснить задачу пользователя и бизнеса до отрисовки",
+      "direction_id": "design",
+      "profile_id": null,
+      "kind": "self_assessment"
+    },
+    {
+      "id": "DESIGN-02",
+      "text": "Могу описать пользовательский сценарий и найти проблемное место",
+      "direction_id": "design",
+      "profile_id": null,
+      "kind": "self_assessment"
+    },
+    {
+      "id": "DESIGN-03",
+      "text": "Могу быстро сделать прототип и проверить идею",
+      "direction_id": "design",
+      "profile_id": null,
+      "kind": "self_assessment"
+    },
+    {
+      "id": "DESIGN-04",
+      "text": "Могу применить композицию, типографику, цвет, иерархию и сетку",
+      "direction_id": "design",
+      "profile_id": null,
+      "kind": "self_assessment"
+    },
+    {
+      "id": "DESIGN-05",
+      "text": "Могу собрать интерфейс из компонентов и продумать состояния",
+      "direction_id": "design",
+      "profile_id": null,
+      "kind": "self_assessment"
+    },
+    {
+      "id": "DESIGN-06",
+      "text": "Могу учесть ошибки, пустые состояния, загрузку и доступность",
+      "direction_id": "design",
+      "profile_id": null,
+      "kind": "self_assessment"
+    },
+    {
+      "id": "DESIGN-07",
+      "text": "Могу провести интервью или тестирование прототипа",
+      "direction_id": "design",
+      "profile_id": null,
+      "kind": "self_assessment"
+    },
+    {
+      "id": "DESIGN-08",
+      "text": "Могу оформить кейс с задачей, процессом, решениями и результатом",
+      "direction_id": "design",
+      "profile_id": null,
+      "kind": "self_assessment"
+    },
+    {
+      "id": "ANDROID-01",
+      "text": "Могу использовать Kotlin: null safety, коллекции и корутины",
+      "direction_id": "mobile",
+      "profile_id": "android",
+      "kind": "self_assessment"
+    },
+    {
+      "id": "ANDROID-02",
+      "text": "Могу управлять состоянием в Jetpack Compose или классическом Android UI",
+      "direction_id": "mobile",
+      "profile_id": "android",
+      "kind": "self_assessment"
+    },
+    {
+      "id": "ANDROID-03",
+      "text": "Могу использовать ViewModel, навигацию и основные компоненты Jetpack",
+      "direction_id": "mobile",
+      "profile_id": "android",
+      "kind": "self_assessment"
+    },
+    {
+      "id": "ANDROID-04",
+      "text": "Могу найти причину утечки памяти в Android",
+      "direction_id": "mobile",
+      "profile_id": "android",
+      "kind": "self_assessment"
+    },
+    {
+      "id": "IOS-01",
+      "text": "Могу использовать Swift: Optionals, value/reference semantics и замыкания",
+      "direction_id": "mobile",
+      "profile_id": "ios",
+      "kind": "self_assessment"
+    },
+    {
+      "id": "IOS-02",
+      "text": "Могу объяснить ARC, strong/weak/unowned и retain cycle",
+      "direction_id": "mobile",
+      "profile_id": "ios",
+      "kind": "self_assessment"
+    },
+    {
+      "id": "IOS-03",
+      "text": "Могу управлять состоянием в UIKit или SwiftUI",
+      "direction_id": "mobile",
+      "profile_id": "ios",
+      "kind": "self_assessment"
+    },
+    {
+      "id": "IOS-04",
+      "text": "Могу объяснить GCD, async/await, race condition и deadlock",
+      "direction_id": "mobile",
+      "profile_id": "ios",
+      "kind": "self_assessment"
+    },
+    {
+      "id": "FLUTTER-01",
+      "text": "Могу использовать Dart, null safety и асинхронность",
+      "direction_id": "mobile",
+      "profile_id": "flutter",
+      "kind": "self_assessment"
+    },
+    {
+      "id": "FLUTTER-02",
+      "text": "Могу объяснить жизненный цикл Widget",
+      "direction_id": "mobile",
+      "profile_id": "flutter",
+      "kind": "self_assessment"
+    },
+    {
+      "id": "FLUTTER-03",
+      "text": "Могу выбрать и применить способ управления состоянием",
+      "direction_id": "mobile",
+      "profile_id": "flutter",
+      "kind": "self_assessment"
+    },
+    {
+      "id": "FLUTTER-04",
+      "text": "Могу работать с платформенными различиями Android и iOS",
+      "direction_id": "mobile",
+      "profile_id": "flutter",
+      "kind": "self_assessment"
+    },
+    {
+      "id": "PROJECT-01",
+      "text": "Могу превратить размытую задачу в результат и план действий",
+      "direction_id": "management",
+      "profile_id": "project",
+      "kind": "self_assessment"
+    },
+    {
+      "id": "PROJECT-02",
+      "text": "Могу составить план с этапами, ответственными и сроками",
+      "direction_id": "management",
+      "profile_id": "project",
+      "kind": "self_assessment"
+    },
+    {
+      "id": "PROJECT-03",
+      "text": "Могу отслеживать зависимости, блокеры и изменения объёма",
+      "direction_id": "management",
+      "profile_id": "project",
+      "kind": "self_assessment"
+    },
+    {
+      "id": "PROJECT-04",
+      "text": "Могу заранее заметить риск и предложить варианты действий",
+      "direction_id": "management",
+      "profile_id": "project",
+      "kind": "self_assessment"
+    },
+    {
+      "id": "PROJECT-05",
+      "text": "Могу провести синхронизацию и зафиксировать следующие шаги",
+      "direction_id": "management",
+      "profile_id": "project",
+      "kind": "self_assessment"
+    },
+    {
+      "id": "PROJECT-06",
+      "text": "Могу приоритизировать задачи при ограниченных ресурсах",
+      "direction_id": "management",
+      "profile_id": "project",
+      "kind": "self_assessment"
+    },
+    {
+      "id": "PROJECT-07",
+      "text": "Могу показать статус проекта без лишних деталей",
+      "direction_id": "management",
+      "profile_id": "project",
+      "kind": "self_assessment"
+    },
+    {
+      "id": "PROJECT-08",
+      "text": "Могу провести ретроспективу и выбрать улучшение процесса",
+      "direction_id": "management",
+      "profile_id": "project",
+      "kind": "self_assessment"
+    },
+    {
+      "id": "BA-01",
+      "text": "Могу описать текущий процесс и найти узкие места",
+      "direction_id": "management",
+      "profile_id": "ba",
+      "kind": "self_assessment"
+    },
+    {
+      "id": "BA-02",
+      "text": "Могу собрать, проверить и согласовать требования",
+      "direction_id": "management",
+      "profile_id": "ba",
+      "kind": "self_assessment"
+    },
+    {
+      "id": "BA-03",
+      "text": "Могу описать пользовательский сценарий и исключения",
+      "direction_id": "management",
+      "profile_id": "ba",
+      "kind": "self_assessment"
+    },
+    {
+      "id": "BA-04",
+      "text": "Могу сформулировать бизнес-правила без противоречий",
+      "direction_id": "management",
+      "profile_id": "ba",
+      "kind": "self_assessment"
+    },
+    {
+      "id": "BA-05",
+      "text": "Могу построить схему процесса или взаимодействия систем",
+      "direction_id": "management",
+      "profile_id": "ba",
+      "kind": "self_assessment"
+    },
+    {
+      "id": "BA-06",
+      "text": "Могу написать постановку для разработки и тестирования",
+      "direction_id": "management",
+      "profile_id": "ba",
+      "kind": "self_assessment"
+    },
+    {
+      "id": "BA-07",
+      "text": "Могу использовать данные для проверки проблемы и эффекта",
+      "direction_id": "management",
+      "profile_id": "ba",
+      "kind": "self_assessment"
+    },
+    {
+      "id": "BA-08",
+      "text": "Могу сравнить решения и аргументировать рекомендацию",
+      "direction_id": "management",
+      "profile_id": "ba",
+      "kind": "self_assessment"
+    }
+  ],
+  "discovery": [
+    {
+      "id": "DISC-01",
+      "text": "Мне интересно создавать серверные программы и сервисы",
+      "direction_id": "backend"
+    },
+    {
+      "id": "DISC-02",
+      "text": "Мне интересно собирать интерфейсы для сайтов",
+      "direction_id": "frontend"
+    },
+    {
+      "id": "DISC-03",
+      "text": "Мне интересно создавать мобильные приложения",
+      "direction_id": "mobile"
+    },
+    {
+      "id": "DISC-04",
+      "text": "Мне интересно разворачивать системы и разбираться со сбоями",
+      "direction_id": "devops"
+    },
+    {
+      "id": "DISC-05",
+      "text": "Мне интересно обучать модели и исследовать их ошибки",
+      "direction_id": "ml"
+    },
+    {
+      "id": "DISC-06",
+      "text": "Мне интересно искать закономерности в данных",
+      "direction_id": "analytics"
+    },
+    {
+      "id": "DISC-07",
+      "text": "Мне интересно искать уязвимости и риски систем",
+      "direction_id": "security"
+    },
+    {
+      "id": "DISC-08",
+      "text": "Мне интересно понимать пользователей и развивать продукты",
+      "direction_id": "management"
+    },
+    {
+      "id": "DISC-09",
+      "text": "Мне нравится организовывать проекты, людей и сроки",
+      "direction_id": "management"
+    },
+    {
+      "id": "DISC-10",
+      "text": "Мне интересно проектировать интерфейсы и визуальные решения",
+      "direction_id": "design"
+    }
+  ]
+}

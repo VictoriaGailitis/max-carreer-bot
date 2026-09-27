@@ -1,0 +1,13 @@
+# Supply FRONTEND_DIST with an existing directory containing the built index.html.
+# Local: docker compose -f compose.yaml -f deploy/compose.frontend.yaml up --build -d
+# Production: add deploy/compose.production.yaml before deploy/compose.frontend.yaml.
+services:
+  proxy:
+    volumes:
+      - ./deploy/caddy/Caddyfile.frontend:/etc/caddy/Caddyfile:ro
+      - type: bind
+        source: "${FRONTEND_DIST:?Set FRONTEND_DIST to compiled frontend assets}"
+        target: /srv/frontend
+        read_only: true
+        bind:
+          create_host_path: false
