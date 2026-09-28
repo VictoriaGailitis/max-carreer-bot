@@ -1,0 +1,19 @@
+# Explicit one-off catalog operations; not started by the normal Compose command.
+services:
+  catalog:
+    profiles: [tools]
+    build:
+      context: ./backend
+      target: ops
+    user: "${APP_UID:-65532}:${APP_GID:-65532}"
+    read_only: true
+    secrets:
+      - database_url_migrate
+    volumes:
+      - type: bind
+        source: ./.local/catalog
+        target: /catalog
+        read_only: true
+        bind:
+          create_host_path: false
+    networks: [backend]

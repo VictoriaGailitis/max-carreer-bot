@@ -19,3 +19,5 @@ node_modules/
 *.out
 .kilo/
 .kilocode/
+__pycache__/
+*.py[cod]

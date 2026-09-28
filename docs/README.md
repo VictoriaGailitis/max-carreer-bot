@@ -9,6 +9,7 @@
 | [api.md](api.md) | Реализованные API, данные пользователей и хранение |
 | [frontend.md](frontend.md) | Вход, опросник, клиент API и подключение интерфейса |
 | [operations.md](operations.md) | Compose, миграции, секреты и публичное размещение |
+| [seed-vk.md](seed-vk.md) | Сбор программ VK и заполнение локального каталога |
 
 Машиночитаемый контракт — [OpenAPI](../api/openapi.yaml), клиент — [TypeScript](../api/client/client.ts).
 
