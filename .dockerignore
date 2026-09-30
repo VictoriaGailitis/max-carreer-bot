@@ -1,0 +1,26 @@
+# Root context is used only to build the frontend and its shared data.
+**
+!frontend/
+!frontend/**
+!api/
+!api/client/
+!api/client/**
+!backend/
+!backend/internal/
+!backend/internal/geography/
+!backend/internal/geography/cities.json
+!backend/data/
+!backend/data/question-bank.v1.json
+!deploy/
+!deploy/caddy/
+!deploy/caddy/Caddyfile.frontend
+**/node_modules/
+**/dist/
+**/.env*
+**/.git/
+**/.local/
+**/secrets/
+**/*.key
+**/*.pem
+**/*.log
+**/.DS_Store

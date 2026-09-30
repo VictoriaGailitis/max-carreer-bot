@@ -12,7 +12,7 @@
 
 ## Фронтенд
 
-Исходники frontend добавляются в `frontend/`, Go-модуль находится в `backend/`. Подключение dev server, локальный тестовый вход и TypeScript-клиент описаны в [инструкции для фронтенда](frontend.md). Для собранной SPA стандартный путь — `frontend/dist/`; при другом каталоге укажите `FRONTEND_DIST` в корневой `.env` и добавьте `-f deploy/compose.frontend.yaml` к команде Compose. Caddy отдаёт frontend и `/api/v1` на одном origin. При отдельном origin API задайте точный `CORS_ALLOWED_ORIGINS`; production принимает только HTTPS origins.
+Исходники React frontend находятся в `frontend/`, Go-модуль — в `backend/`. Основной `docker compose up --build -d` собирает frontend через `frontend/Dockerfile` и раздаёт его через Caddy вместе с API. Подключение dev server, локальный тестовый вход и TypeScript-клиент описаны в [инструкции для фронтенда](frontend.md). Необязательный `deploy/compose.frontend.yaml` подменяет встроенную статику заранее собранным `frontend/dist/` с хоста; другой путь задаётся через `FRONTEND_DIST`. При отдельном origin API задайте точный `CORS_ALLOWED_ORIGINS`; production принимает только HTTPS origins.
 
 ## Публичное размещение
 
