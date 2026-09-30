@@ -1,0 +1,11 @@
+| FigmaName | ref |
+| --- | --- |
+| color/hero | var(--color-hero) |
+| color/lime | var(--color-lime) |
+| color/lilac | var(--color-lilac) |
+| color/ink | var(--color-ink) |
+| color/muted | var(--color-muted) |
+| color/bg | var(--color-bg) |
+| color/surface | var(--color-surface) |
+| color/border | var(--color-border) |
+| color/danger | var(--color-danger) |
