@@ -4,7 +4,7 @@ schema_version: '1.0'
 solution:
   name: Курсик
   repository: https://github.com/VictoriaGailitis/max-carreer-bot
-base_url: https://158.160.19.58
+base_url: https://kursik.158-160-19-58.sslip.io
 openapi_file: api/openapi.yaml
 format_notes:
 - Project-defined checklist schema v1.0; the supplied task specifies required fields but no official parser schema.
@@ -43,7 +43,8 @@ preconditions:
   No catalog/503 is a failed prerequisite, not a successful main scenario.
 - MAX login is an external dependency. Synthetic initData from scripts/dev/local-init-data.py is permitted only
   against the matching local-only environment.
-- The HTTPS address was supplied by the user; TLS, reachability and deployed commit must be verified separately.
+- The deployment hostname returns HTTP 200 at /healthz over verified HTTPS. Direct HTTPS to the server IP fails
+  TLS negotiation. The deployed commit and authenticated checks must still be verified separately.
 test_data:
   profile: Synthetic values defined in save_draft; question IDs come from the live preview.
   local_fixture: backend/testdata/catalog-demo.v1.json
