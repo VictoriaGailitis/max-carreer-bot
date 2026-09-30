@@ -105,8 +105,8 @@ func (v *Validator) validateItem(o Opportunity, datasetDemo bool) error {
 			return fmt.Errorf("%s: %w", field.name, err)
 		}
 	}
-	if len(o.Directions) == 0 || len(o.Directions) > 9 {
-		return errors.New("directions: expected 1–9 directions")
+	if len(o.Directions) == 0 || len(o.Directions) > 8 {
+		return errors.New("directions: expected 1–8 directions")
 	}
 	seen := map[string]bool{}
 	for _, id := range o.Directions {

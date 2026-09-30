@@ -53,13 +53,13 @@
       "is_demo": true
     },
     {
-      "id": "demo-event-design",
+      "id": "demo-event-security",
       "type": "event",
       "organizer_id": "vk",
-      "title": "Демо: встреча по дизайну",
+      "title": "Демо: встреча по информационной безопасности",
       "summary": "Синтетическое событие для проверки типов карточек.",
       "description": "Не является действующим мероприятием.",
-      "directions": ["design"],
+      "directions": ["security"],
       "format": "offline",
       "cities": ["Москва"],
       "education_requirements": null,

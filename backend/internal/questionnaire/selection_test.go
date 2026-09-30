@@ -27,7 +27,7 @@ func ids(preview Preview) []string {
 
 func TestBankAndSelection(t *testing.T) {
 	bank := testBank(t)
-	if len(bank.Directions) != 9 || len(bank.Questions) != 126 {
+	if len(bank.Directions) != 8 || len(bank.Questions) != 118 {
 		t.Fatalf("unexpected bank size: %d directions, %d questions", len(bank.Directions), len(bank.Questions))
 	}
 	tests := []struct {
@@ -38,7 +38,7 @@ func TestBankAndSelection(t *testing.T) {
 	}{
 		{"one", Selection{Directions: []string{"backend"}}, []string{"BACK-01", "BACK-02", "BACK-03", "BACK-04", "BACK-05", "BACK-06", "BACK-07", "BACK-08"}, 8},
 		{"two normalized", Selection{Directions: []string{"analytics", "backend"}}, []string{"BACK-01", "DATA-01", "BACK-02", "DATA-02", "BACK-03", "DATA-03"}, 12},
-		{"three", Selection{Directions: []string{"design", "backend", "analytics"}}, []string{"BACK-01", "DATA-01", "DESIGN-01", "BACK-02", "DATA-02", "DESIGN-02"}, 16},
+		{"three", Selection{Directions: []string{"security", "backend", "analytics"}}, []string{"BACK-01", "DATA-01", "SEC-01", "BACK-02", "DATA-02", "SEC-02"}, 16},
 		{"mobile ios", Selection{Directions: []string{"mobile"}, Profiles: map[string]string{"mobile": "ios"}}, []string{"IOS-01", "MOBILE-01", "IOS-02", "MOBILE-02", "IOS-03", "MOBILE-03", "IOS-04", "MOBILE-04"}, 8},
 		{"management all", Selection{Directions: []string{"management"}, Profiles: map[string]string{"management": "management-all"}}, []string{"PROJECT-01", "BA-02", "PRODUCT-03", "PROJECT-04", "BA-05", "PRODUCT-06", "PROJECT-07", "BA-08"}, 8},
 		{"product alias", Selection{Directions: []string{"product"}}, []string{"PRODUCT-01", "PRODUCT-02"}, 8},

@@ -88,6 +88,7 @@ func newHandler(validator *auth.Validator, repo SessionRepository, state UserSta
 	if state != nil {
 		mux.Handle("GET /api/v1/questionnaire", a.requireSession(http.HandlerFunc(a.questionnaire)))
 		mux.Handle("GET /api/v1/me", a.requireSession(http.HandlerFunc(a.me)))
+		mux.Handle("GET /api/v1/me/results", a.requireSession(http.HandlerFunc(a.results)))
 		mux.Handle("GET /api/v1/me/draft", a.requireSession(http.HandlerFunc(a.getDraft)))
 		mux.Handle("PUT /api/v1/me/draft", a.requireSession(http.HandlerFunc(a.putDraft)))
 		mux.Handle("DELETE /api/v1/me/draft", a.requireSession(http.HandlerFunc(a.deleteDraft)))

@@ -3,10 +3,13 @@ package profile
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"slices"
 	"strings"
 	"time"
+	"unicode/utf8"
 
+	"max-carreer-bot/internal/geography"
 	"max-carreer-bot/internal/questionnaire"
 )
 
@@ -41,6 +44,11 @@ func invalid(field, message string) error { return &ValidationError{map[string]s
 // Normalize verifies client-editable fields, derives the issued question set,
 // and discards stale answers only when they belonged to the previous draft.
 func Normalize(bank *questionnaire.Bank, draft Document, previous *Document) (Document, error) {
+	var cityErr error
+	draft, cityErr = normalizeCities(draft)
+	if cityErr != nil {
+		return Document{}, cityErr
+	}
 	if draft.CurrentStep < 1 || draft.CurrentStep > 64 {
 		return Document{}, invalid("current_step", "Недопустимый шаг")
 	}
@@ -98,6 +106,11 @@ func Normalize(bank *questionnaire.Bank, draft Document, previous *Document) (Do
 }
 
 func Complete(bank *questionnaire.Bank, draft Document, now time.Time) (Document, error) {
+	var cityErr error
+	draft, cityErr = normalizeCities(draft)
+	if cityErr != nil {
+		return Document{}, cityErr
+	}
 	if draft.SchemaVersion != SchemaVersion || draft.QuestionnaireVersion != bank.QuestionnaireVersion || draft.SelectionVersion != questionnaire.SelectionVersion {
 		return Document{}, invalid("questionnaire_version", "Версия опросника изменилась")
 	}
@@ -159,7 +172,7 @@ func validateCommon(d Document, complete bool) error {
 	if err := uniqueStrings("preferred_cities", d.PreferredCities, 20, 80); err != nil {
 		return err
 	}
-	if strings.TrimSpace(d.OtherCity) != d.OtherCity || len(d.OtherCity) > 80 {
+	if strings.TrimSpace(d.OtherCity) != d.OtherCity || utf8.RuneCountInString(d.OtherCity) > 80 {
 		return invalid("other_city", "Некорректный город")
 	}
 	if complete && d.PreferredFormat != "online" && !d.AnyCity && len(d.PreferredCities) == 0 && d.OtherCity == "" {
@@ -193,7 +206,7 @@ func uniqueStrings(field string, values []string, max, maxLen int) error {
 		return invalid(field, "Слишком много значений")
 	}
 	for i, v := range values {
-		if v == "" || len(v) > maxLen || strings.TrimSpace(v) != v || slices.Contains(values[:i], v) {
+		if v == "" || utf8.RuneCountInString(v) > maxLen || strings.TrimSpace(v) != v || slices.Contains(values[:i], v) {
 			return invalid(field, "Некорректное или повторяющееся значение")
 		}
 	}
@@ -201,3 +214,23 @@ func uniqueStrings(field string, values []string, max, maxLen int) error {
 }
 
 var ErrRevisionConflict = errors.New("revision conflict")
+
+// Canonicalize known spellings, but never silently correct a misspelling.
+func normalizeCities(draft Document) (Document, error) {
+	draft.PreferredCities = slices.Clone(draft.PreferredCities)
+	for i, city := range draft.PreferredCities {
+		canonical, ok := geography.Canonical(city)
+		if !ok {
+			return Document{}, invalid(fmt.Sprintf("preferred_cities[%d]", i), "Город не найден в справочнике. Выберите город и регион из подсказок")
+		}
+		draft.PreferredCities[i] = canonical
+	}
+	if draft.OtherCity != "" {
+		canonical, ok := geography.Canonical(draft.OtherCity)
+		if !ok {
+			return Document{}, invalid("other_city", "Город не найден в справочнике. Выберите город из подсказок")
+		}
+		draft.OtherCity = canonical
+	}
+	return draft, nil
+}

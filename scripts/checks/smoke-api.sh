@@ -125,7 +125,7 @@ preview_status() {
 
 base=http://127.0.0.1:18081/api/v1
 metadata=$(curl -fsS -H "Authorization: Bearer $token_one_again" "$base/questionnaire")
-[[ "$(jq -r '.selection_version == 1 and (.directions|length) == 9 and (.general_questions|length) == 5' <<< "$metadata")" == true ]]
+[[ "$(jq -r '.questionnaire_version == "max-v2" and .selection_version == 1 and (.directions|length) == 8 and (.general_questions|length) == 5' <<< "$metadata")" == true ]]
 first_state=$(curl -fsS -H "Authorization: Bearer $token_one_again" "$base/me")
 [[ "$(jq -r '.profile == null and .draft == null and .draft_revision == 0' <<< "$first_state")" == true ]]
 preview=$(curl -fsS -H "Authorization: Bearer $token_one_again" -H 'Content-Type: application/json' \
@@ -139,13 +139,18 @@ stale_status=$(curl -sS -o /dev/null -w '%{http_code}' -X PUT -H "Authorization:
 [[ "$stale_status" == 409 ]]
 [[ "$(jq -r '.profile == null and .draft != null' <<< "$(curl -fsS -H "Authorization: Bearer $token_one_again" "$base/me")")" == true ]]
 [[ "$(jq -r '.profile == null and .draft == null' <<< "$(curl -fsS -H "Authorization: Bearer $token_two" "$base/me")")" == true ]]
-key=8b0de594-7a27-4e3f-a025-7f14ad009e6e
+key=8b0de594-7a27-4e3f-a025-7f14ad009e6e # gitleaks:allow -- synthetic idempotency UUID, not a credential
 complete=$(curl -fsS -H "Authorization: Bearer $token_one_again" -H 'Content-Type: application/json' \
   -H "Idempotency-Key: $key" -d '{"draft_revision":1}' "$base/me/onboarding/complete")
 replay=$(curl -fsS -H "Authorization: Bearer $token_one_again" -H 'Content-Type: application/json' \
   -H "Idempotency-Key: $key" -d '{"draft_revision":1}' "$base/me/onboarding/complete")
 [[ "$complete" == "$replay" ]]
 [[ "$(jq -r '.revision == 1 and .profile.skills != null and .profile.completed_at != null' <<< "$complete")" == true ]]
+# Results must work even before a catalog is imported, and remain user-scoped.
+results=$(curl -fsS -H "Authorization: Bearer $token_one_again" "$base/me/results")
+[[ "$(jq -r '.kind == "self_assessment" and .profile_revision == 1 and (.directions|length) == 1 and (.directions[0] | .direction_id == "backend" and .score_percent == 0 and .level == "starter" and .assessed_count == 8 and .question_count == 8 and .coverage_percent == 100 and .course_filter == {type:"course",direction:"backend"})' <<< "$results")" == true ]]
+[[ "$(curl -sS -o /dev/null -w '%{http_code}' "$base/me/results")" == 401 ]]
+[[ "$(curl -sS -o /dev/null -w '%{http_code}' -H "Authorization: Bearer $token_two" "$base/me/results")" == 409 ]]
 different_body_status=$(curl -sS -o /dev/null -w '%{http_code}' -H "Authorization: Bearer $token_one_again" \
   -H 'Content-Type: application/json' -H "Idempotency-Key: $key" -d '{"draft_revision":2}' "$base/me/onboarding/complete")
 [[ "$different_body_status" == 409 ]]
@@ -192,7 +197,7 @@ fi
 [[ "$(docker exec "$db_id" psql -U postgres -d postgres -At -c 'SELECT count(*) FROM catalog_versions')" == 2 ]]
 [[ "$(curl -sS -o /dev/null -w '%{http_code}' -X PUT -H "Authorization: Bearer $token_one_again" "$base/me/favorites/demo-course-backend")" == 204 ]]
 [[ "$(curl -sS -o /dev/null -w '%{http_code}' -X PUT -H "Authorization: Bearer $token_one_again" "$base/me/favorites/demo-course-backend")" == 204 ]]
-[[ "$(curl -sS -o /dev/null -w '%{http_code}' -X PUT -H "Authorization: Bearer $token_one_again" "$base/me/favorites/demo-event-design")" == 204 ]]
+[[ "$(curl -sS -o /dev/null -w '%{http_code}' -X PUT -H "Authorization: Bearer $token_one_again" "$base/me/favorites/demo-event-security")" == 204 ]]
 [[ "$(curl -sS -o /dev/null -w '%{http_code}' -X PUT -H "Authorization: Bearer $token_one_again" "$base/me/favorites/demo-closed-event")" == 409 ]]
 [[ "$(curl -sS -o /dev/null -w '%{http_code}' -X PUT -H "Authorization: Bearer $token_one_again" "$base/me/favorites/demo-draft-course")" == 404 ]]
 [[ "$(jq -r '.favorites_revision == 2 and (.items|length) == 2' <<< "$(curl -fsS -H "Authorization: Bearer $token_one_again" "$base/me/favorites")")" == true ]]
@@ -203,7 +208,7 @@ curl -fsS -X PUT -H "Authorization: Bearer $token_one_again" -H 'Content-Type: a
 [[ "$(curl -sS -o /dev/null -w '%{http_code}' -X DELETE -H "Authorization: Bearer $token_one_again" "$base/me/draft")" == 204 ]]
 [[ "$(jq -r '.profile_revision == 1 and .draft == null and .draft_revision == 4' <<< "$(curl -fsS -H "Authorization: Bearer $token_one_again" "$base/me")")" == true ]]
 [[ "$(jq -r '.favorites_revision == 2 and (.items|length) == 2' <<< "$(curl -fsS -H "Authorization: Bearer $token_one_again" "$base/me/favorites")")" == true ]]
-jq '.items |= map(select(.id != "demo-course-backend") | if .id == "demo-event-design" then .availability="closed" else . end)' \
+jq '.items |= map(select(.id != "demo-course-backend") | if .id == "demo-event-security" then .availability="closed" else . end)' \
   "$smoke_root/live.json" > "$smoke_root/updated.json"
 docker run --rm --network "$network_name" --user "$(id -u):$(id -g)" \
   --mount "type=bind,src=$smoke_root,dst=/work,readonly" \
@@ -211,10 +216,10 @@ docker run --rm --network "$network_name" --user "$(id -u):$(id -g)" \
   -database-url-file /work/secrets/db-url -allow-domain example.test >/dev/null
 favorites_after_update=$(curl -fsS -H "Authorization: Bearer $token_one_again" "$base/me/favorites")
 [[ "$(jq -r '[.items[] | select(.id == "demo-course-backend")][0] | .effective_status == "unavailable" and .item == null' <<< "$favorites_after_update")" == true ]]
-[[ "$(jq -r '[.items[] | select(.id == "demo-event-design")][0].effective_status' <<< "$favorites_after_update")" == closed ]]
+[[ "$(jq -r '[.items[] | select(.id == "demo-event-security")][0].effective_status' <<< "$favorites_after_update")" == closed ]]
 [[ "$(curl -sS -o /dev/null -w '%{http_code}' -X DELETE -H "Authorization: Bearer $token_one_again" "$base/me/favorites/demo-course-backend")" == 204 ]]
 [[ "$(curl -sS -o /dev/null -w '%{http_code}' -X DELETE -H "Authorization: Bearer $token_one_again" "$base/me/favorites/demo-course-backend")" == 204 ]]
-[[ "$(curl -sS -o /dev/null -w '%{http_code}' -X DELETE -H "Authorization: Bearer $token_one_again" "$base/me/favorites/demo-event-design")" == 204 ]]
+[[ "$(curl -sS -o /dev/null -w '%{http_code}' -X DELETE -H "Authorization: Bearer $token_one_again" "$base/me/favorites/demo-event-security")" == 204 ]]
 [[ "$(jq -r '.favorites_revision == 4 and (.items|length) == 0' <<< "$(curl -fsS -H "Authorization: Bearer $token_one_again" "$base/me/favorites")")" == true ]]
 logout_status=$(curl -sS -o /dev/null -w '%{http_code}' -X DELETE \
   -H "Authorization: Bearer $token_one" http://127.0.0.1:18081/api/v1/auth/session)

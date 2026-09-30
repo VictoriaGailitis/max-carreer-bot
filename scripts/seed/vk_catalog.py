@@ -28,7 +28,7 @@ SOURCES = {
 }
 FETCH_HOSTS = {'education.vk.company', 'internship.vk.company', 'tilda-embed.tech-mail.ru'}
 ACTION_HOSTS = {'education.vk.company', 'internship.vk.company', 'vk.com', 'ai.edu.gov.ru'}
-DIRECTIONS = ['backend', 'frontend', 'mobile', 'devops', 'ml', 'analytics', 'security', 'management', 'design']
+DIRECTIONS = ['backend', 'frontend', 'mobile', 'devops', 'ml', 'analytics', 'security', 'management']
 MAX_RESPONSE = 5 << 20
 
 
@@ -172,7 +172,6 @@ def classify(title: str, label: str = '') -> list[str]:
         'analytics': r'аналит|анализ.*данн|big data|больш.*данн|data engineer',
         'security': r'безопасн|appsec|кибер',
         'management': r'менедж|продакт|product|маркетинг|smm|non-tech|гибкие навыки',
-        'design': r'дизайн|креатив|digital|медиа|игр',
     }
     found = {key for key, pattern in rules.items() if re.search(pattern, text)}
     # Multi-area source labels include software development alongside other areas.

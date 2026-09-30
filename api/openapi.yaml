@@ -1,10 +1,10 @@
 openapi: 3.1.0
 info:
   title: Навигатор возможностей — Backend API
-  version: 0.6.0
+  version: 0.7.0
   description: >-
     API входа MAX, опросника, зашифрованного профиля,
-    каталога, избранного и webhook бота MAX.
+    результатов самооценки, каталога, избранного и webhook бота MAX.
 servers:
   - url: /
     description: Один origin с фронтендом
@@ -124,6 +124,25 @@ paths:
           description: Текущее состояние пользователя
           content: { application/json: { schema: { $ref: '#/components/schemas/UserState' } } }
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '503': { $ref: '#/components/responses/Unavailable' }
+  /api/v1/me/results:
+    get:
+      summary: Получить результаты самооценки по завершённому профилю
+      description: >-
+        Не зависит от каталога. Для каждого направления считается округлённое
+        среднее числовых ответов / 3 * 100. null исключается из среднего.
+        Если все ответы null, score_percent=0, level=starter,
+        basis=no_self_assessment и coverage_percent=0.
+        Это самооценка опыта, не проверка знаний или готовности к стажировке.
+        course_filter применяется к GET /api/v1/opportunities отдельно.
+      security: [{ BearerAuth: [] }]
+      responses:
+        '200': { description: Результаты по сохранённому профилю, content: { application/json: { schema: { $ref: '#/components/schemas/AssessmentResult' } } } }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '409':
+          description: PROFILE_REQUIRED — профиль отсутствует; PROFILE_OUTDATED — опросник изменился
+          content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
         '503': { $ref: '#/components/responses/Unavailable' }
   /api/v1/me/draft:
     get:
@@ -294,7 +313,7 @@ paths:
                   uniqueItems: true
                   items:
                     type: string
-                    enum: [backend, frontend, mobile, devops, ml, analytics, security, management, design, product]
+                    enum: [backend, frontend, mobile, devops, ml, analytics, security, management, product]
                 profiles:
                   type: object
                   additionalProperties: false
@@ -315,7 +334,7 @@ paths:
                 additionalProperties: false
                 required: [questionnaire_version, selection_version, directions, question_count, questions]
                 properties:
-                  questionnaire_version: { type: string, const: max-v1 }
+                  questionnaire_version: { type: string, const: max-v2 }
                   selection_version: { type: integer, const: 1 }
                   directions:
                     type: array
@@ -384,6 +403,61 @@ components:
       type: http
       scheme: bearer
   schemas:
+    AssessmentSkill:
+      type: object
+      additionalProperties: false
+      required: [question_id, text, answer, answer_label]
+      properties:
+        question_id: { type: string }
+        text: { type: string }
+        answer: { type: [integer, 'null'], enum: [0, 1, 2, 3, null] }
+        answer_label: { type: string }
+    DirectionResult:
+      type: object
+      additionalProperties: false
+      required: [direction_id, title, score_percent, level, level_label, description, basis, assessed_count, question_count, coverage_percent, skills, focus_skills, unassessed_skill_ids, course_filter]
+      properties:
+        direction_id: { type: string, enum: [backend, frontend, mobile, devops, ml, analytics, security, management] }
+        title: { type: string }
+        score_percent: { type: integer, minimum: 0, maximum: 100 }
+        level: { type: string, enum: [starter, developing, solid, confident] }
+        level_label: { type: string }
+        description: { type: string }
+        basis: { type: string, enum: [self_reported, no_self_assessment] }
+        assessed_count: { type: integer, minimum: 0 }
+        question_count: { type: integer, minimum: 1 }
+        coverage_percent: { type: integer, minimum: 0, maximum: 100 }
+        skills: { type: array, items: { $ref: '#/components/schemas/AssessmentSkill' } }
+        focus_skills:
+          description: До трёх самых низких числовых самооценок ниже 3; null не является пробелом в знаниях
+          type: array
+          maxItems: 3
+          items: { $ref: '#/components/schemas/AssessmentSkill' }
+        unassessed_skill_ids: { type: array, items: { type: string } }
+        course_filter:
+          type: object
+          additionalProperties: false
+          required: [type, direction]
+          properties:
+            type: { type: string, const: course }
+            direction: { type: string }
+    AssessmentResult:
+      type: object
+      additionalProperties: false
+      required: [kind, scoring_version, questionnaire_version, profile_revision, completed_at, evaluated_at, disclaimer, directions]
+      properties:
+        kind: { type: string, const: self_assessment }
+        scoring_version: { type: integer, const: 1 }
+        questionnaire_version: { type: string }
+        profile_revision: { type: integer }
+        completed_at: { type: string, format: date-time }
+        evaluated_at: { type: string, format: date-time }
+        disclaimer: { type: string }
+        directions:
+          type: array
+          minItems: 1
+          maxItems: 3
+          items: { $ref: '#/components/schemas/DirectionResult' }
     Questionnaire:
       type: object
       additionalProperties: false
@@ -565,12 +639,13 @@ components:
         study_year: { type: integer, minimum: 1, maximum: 6 }
         preferred_format: { type: string, enum: [online, offline, both] }
         preferred_cities:
+          description: Canonical city values from the bundled Russia city directory; repeated names require the regional qualifier. Unknown names are rejected.
           type: array
           maxItems: 20
           uniqueItems: true
           items: { type: string, maxLength: 80 }
         any_city: { type: boolean }
-        other_city: { type: string, maxLength: 80 }
+        other_city: { type: string, maxLength: 80, description: Legacy field; must also resolve to a city in the bundled directory. }
         backend_languages:
           type: array
           uniqueItems: true
@@ -608,12 +683,13 @@ components:
         study_year: { type: integer, minimum: 1, maximum: 6 }
         preferred_format: { type: string, enum: [online, offline, both] }
         preferred_cities:
+          description: Canonical city values from the bundled Russia city directory; repeated names require the regional qualifier. Unknown names are rejected.
           type: array
           maxItems: 20
           uniqueItems: true
           items: { type: string, maxLength: 80 }
         any_city: { type: boolean }
-        other_city: { type: string, maxLength: 80 }
+        other_city: { type: string, maxLength: 80, description: Legacy field; must also resolve to a city in the bundled directory. }
         backend_languages:
           type: array
           uniqueItems: true
@@ -652,12 +728,13 @@ components:
         study_year: { type: integer, minimum: 1, maximum: 6 }
         preferred_format: { type: string, enum: [online, offline, both] }
         preferred_cities:
+          description: Canonical city values from the bundled Russia city directory; repeated names require the regional qualifier. Unknown names are rejected.
           type: array
           maxItems: 20
           uniqueItems: true
           items: { type: string, maxLength: 80 }
         any_city: { type: boolean }
-        other_city: { type: string, maxLength: 80 }
+        other_city: { type: string, maxLength: 80, description: Legacy field; must also resolve to a city in the bundled directory. }
         backend_languages:
           type: array
           uniqueItems: true

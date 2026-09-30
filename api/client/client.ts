@@ -1,5 +1,5 @@
 /** Browser client for api/openapi.yaml. No runtime dependencies or token persistence. */
-export type Direction = 'backend' | 'frontend' | 'mobile' | 'devops' | 'ml' | 'analytics' | 'security' | 'management' | 'design';
+export type Direction = 'backend' | 'frontend' | 'mobile' | 'devops' | 'ml' | 'analytics' | 'security' | 'management';
 export type OpportunityType = 'course' | 'internship' | 'event';
 export type Experience = 0 | 1 | 2 | 3 | null;
 export type Format = 'online' | 'offline' | 'hybrid' | 'unknown';
@@ -31,6 +31,33 @@ export interface Session { token: string; expires_at: string; user_id: string }
 export interface UserState { profile: Profile | null; profile_revision: number; draft: SavedDraft | null; draft_revision: number }
 export interface DraftResponse { draft: SavedDraft | null; revision: number }
 export interface Completion { profile: Profile; revision: number }
+export interface AssessmentSkill { question_id: string; text: string; answer: Experience; answer_label: string }
+export interface DirectionResult {
+  direction_id: Direction;
+  title: string;
+  score_percent: number;
+  level: 'starter' | 'developing' | 'solid' | 'confident';
+  level_label: string;
+  description: string;
+  basis: 'self_reported' | 'no_self_assessment';
+  assessed_count: number;
+  question_count: number;
+  coverage_percent: number;
+  skills: AssessmentSkill[];
+  focus_skills: AssessmentSkill[];
+  unassessed_skill_ids: string[];
+  course_filter: { type: 'course'; direction: Direction };
+}
+export interface AssessmentResult {
+  kind: 'self_assessment';
+  scoring_version: 1;
+  questionnaire_version: string;
+  profile_revision: number;
+  completed_at: string;
+  evaluated_at: string;
+  disclaimer: string;
+  directions: DirectionResult[];
+}
 export interface Question { id: string; direction_id: Direction; text: string }
 export interface Preview {
   questionnaire_version: string;
@@ -136,6 +163,7 @@ export class NavigatorClient {
     this.token = undefined;
   }
   me(signal?: AbortSignal): Promise<UserState> { return this.request('/me', 'GET', undefined, signal) }
+  results(signal?: AbortSignal): Promise<AssessmentResult> { return this.request('/me/results', 'GET', undefined, signal) }
   questionnaire(signal?: AbortSignal): Promise<Questionnaire> { return this.request('/questionnaire', 'GET', undefined, signal) }
   preview(selection: Selection, signal?: AbortSignal): Promise<Preview> { return this.request('/questionnaire/preview', 'POST', selection, signal) }
   draft(signal?: AbortSignal): Promise<DraftResponse> { return this.request('/me/draft', 'GET', undefined, signal) }

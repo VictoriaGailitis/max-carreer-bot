@@ -34,7 +34,7 @@ func TestRankAndFiltering(t *testing.T) {
 	if len(filtered.Items) != 1 || filtered.Items[0].Type != "event" {
 		t.Fatalf("filter: %+v", filtered)
 	}
-	if got := BuildResult(Stored{Version: "v", Items: items}, p, 7, when, Filters{Direction: "security"}); len(got.Items) != 0 {
+	if got := BuildResult(Stored{Version: "v", Items: items}, p, 7, when, Filters{Direction: "devops"}); len(got.Items) != 0 {
 		t.Fatalf("empty filter: %+v", got)
 	}
 }

@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "questionnaire_version": "max-v1",
+  "questionnaire_version": "max-v2",
   "status": "runtime_bank_v1",
   "source": {
     "sha256": "8b921d3a8a89f5902eec432a4fc13eb3a6d121680631114c93bb528f8250d3b4",
@@ -165,20 +165,6 @@
         "PRODUCT-06",
         "PRODUCT-07",
         "PRODUCT-08"
-      ]
-    },
-    {
-      "id": "design",
-      "title": "Дизайн",
-      "core_question_ids": [
-        "DESIGN-01",
-        "DESIGN-02",
-        "DESIGN-03",
-        "DESIGN-04",
-        "DESIGN-05",
-        "DESIGN-06",
-        "DESIGN-07",
-        "DESIGN-08"
       ]
     }
   ],
@@ -925,62 +911,6 @@
       "kind": "self_assessment"
     },
     {
-      "id": "DESIGN-01",
-      "text": "Могу выяснить задачу пользователя и бизнеса до отрисовки",
-      "direction_id": "design",
-      "profile_id": null,
-      "kind": "self_assessment"
-    },
-    {
-      "id": "DESIGN-02",
-      "text": "Могу описать пользовательский сценарий и найти проблемное место",
-      "direction_id": "design",
-      "profile_id": null,
-      "kind": "self_assessment"
-    },
-    {
-      "id": "DESIGN-03",
-      "text": "Могу быстро сделать прототип и проверить идею",
-      "direction_id": "design",
-      "profile_id": null,
-      "kind": "self_assessment"
-    },
-    {
-      "id": "DESIGN-04",
-      "text": "Могу применить композицию, типографику, цвет, иерархию и сетку",
-      "direction_id": "design",
-      "profile_id": null,
-      "kind": "self_assessment"
-    },
-    {
-      "id": "DESIGN-05",
-      "text": "Могу собрать интерфейс из компонентов и продумать состояния",
-      "direction_id": "design",
-      "profile_id": null,
-      "kind": "self_assessment"
-    },
-    {
-      "id": "DESIGN-06",
-      "text": "Могу учесть ошибки, пустые состояния, загрузку и доступность",
-      "direction_id": "design",
-      "profile_id": null,
-      "kind": "self_assessment"
-    },
-    {
-      "id": "DESIGN-07",
-      "text": "Могу провести интервью или тестирование прототипа",
-      "direction_id": "design",
-      "profile_id": null,
-      "kind": "self_assessment"
-    },
-    {
-      "id": "DESIGN-08",
-      "text": "Могу оформить кейс с задачей, процессом, решениями и результатом",
-      "direction_id": "design",
-      "profile_id": null,
-      "kind": "self_assessment"
-    },
-    {
       "id": "ANDROID-01",
       "text": "Могу использовать Kotlin: null safety, коллекции и корутины",
       "direction_id": "mobile",
@@ -1222,11 +1152,6 @@
       "id": "DISC-09",
       "text": "Мне нравится организовывать проекты, людей и сроки",
       "direction_id": "management"
-    },
-    {
-      "id": "DISC-10",
-      "text": "Мне интересно проектировать интерфейсы и визуальные решения",
-      "direction_id": "design"
     }
   ]
 }
