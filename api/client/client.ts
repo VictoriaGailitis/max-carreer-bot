@@ -130,6 +130,9 @@ export interface FavoritesResult {
   items: Array<{ id: string; effective_status: 'active' | 'closed' | 'unavailable'; item: Opportunity | null }>;
 }
 export interface ErrorDetail { code: string; message: string; fields?: Record<string, string>; request_id: string }
+export class NetworkError extends Error {
+  constructor() { super('NETWORK_ERROR'); this.name = 'NetworkError'; }
+}
 export class ApiError extends Error {
   constructor(readonly status: number, readonly detail: ErrorDetail) {
     super(detail.message);
@@ -190,9 +193,13 @@ export class NavigatorClient {
     const headers: Record<string, string> = { Accept: 'application/json', ...extraHeaders };
     if (this.token) headers.Authorization = 'Bearer ' + this.token;
     if (body !== undefined) headers['Content-Type'] = 'application/json';
+    const serializedBody = body === undefined ? undefined : JSON.stringify(body);
     const response = await this.fetcher(this.base + path, {
-      method, headers, body: body === undefined ? undefined : JSON.stringify(body), signal,
+      method, headers, body: serializedBody, signal,
       credentials: 'omit', cache: 'no-store', redirect: 'error',
+    }).catch((error: unknown) => {
+      if (error instanceof Error && error.name === 'AbortError') throw error;
+      throw new NetworkError();
     });
     if (!response.ok) {
       if (response.status === 401) this.token = undefined;

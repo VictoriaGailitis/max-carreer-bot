@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { ApiError, type NavigatorClient, type DraftInput, type Questionnaire, type Question, type UserState, type Experience } from '../../api/client/client';
 import { CityPicker } from './CityPicker';
+import { completionKey } from './compat';
 import { cityValidation } from './cities';
 import { assessmentDraft, cleanDraft, labels, steps, toDraft, toggleExclusive, validation } from './model';
 import { Button, Choice, ConfirmDialog, ErrorNotice, Heading, Mascot } from './ui';
@@ -59,7 +60,7 @@ export function Onboarding({ api, state, metadata, onComplete, onExit }: { api: 
         if (!completion.current) {
           const saved = await api.saveDraft(revision.current, current);
           revision.current = saved.revision;
-          completion.current = { revision: saved.revision, key: crypto.randomUUID() };
+          completion.current = { revision: saved.revision, key: completionKey() };
         }
         await api.complete(completion.current.revision, completion.current.key);
         onComplete(); return;
@@ -98,7 +99,7 @@ export function Onboarding({ api, state, metadata, onComplete, onExit }: { api: 
       {step === 1 ? <><Heading title={'Что тебе\nинтересно?'}>Выбери до трёх направлений</Heading><progress max={5} value={1} aria-label="Настройка профиля"/><div className="direction-grid">{metadata.directions.map(d => {
         const checked = draft.directions.includes(d.id);
         return <button className={`direction-card ${checked ? 'selected' : ''}`} key={d.id} aria-pressed={checked} disabled={!checked && draft.directions.length >= 3} onClick={() => change({ directions: checked ? draft.directions.filter(v => v !== d.id) : [...draft.directions, d.id] })}><img src={`/assets/direction-${d.id}.svg`} alt=""/>{checked && <img className="selected-mark" src="/assets/selected.svg" alt=""/>}<span>{labels[d.id] ?? d.title}</span></button>;
-      })}</div></> : question ? <><div className="question-top"><span className="pill">НАВЫКИ · {step - 10}/{questions.length}</span><progress max={questions.length} value={step - 10} aria-label="Прогресс самооценки"/></div><section className="question-card"><p className="eyebrow">{labels[question.direction_id]} · НАВЫК</p><h1>{question.text}</h1><p className="muted">Выбери, насколько уверенно ты это делаешь</p><div className="choices">{metadata.answer_scale.map(answer => <Choice key={String(answer.value)} checked={Object.hasOwn(draft.skills ?? {}, question.id) && draft.skills![question.id] === answer.value} onChange={() => change({ skills: { ...draft.skills, [question.id]: answer.value as Experience } })}>{answer.label}</Choice>)}</div></section><Mascot key={question.id} pose={(['think', 'wave', 'support'] as const)[(step - 11) % 3]} className={`question-mascot position-${(step - 11) % 3}`}/></> : <><Heading eyebrow="НАСТРОЙКА ТВОЕГО КУРСА" title={titles[step] ?? 'Твой опыт'}>{descriptions[step]}</Heading>
+      })}</div></> : question ? <><div className="question-top"><span className="pill">НАВЫКИ · {step - 10}/{questions.length}</span><progress max={questions.length} value={step - 10} aria-label="Прогресс самооценки"/></div><section className="question-card"><p className="eyebrow">{labels[question.direction_id]} · НАВЫК</p><h1>{question.text}</h1><p className="muted">Выбери, насколько уверенно ты это делаешь</p><div className="choices">{metadata.answer_scale.map(answer => <Choice key={String(answer.value)} checked={Object.prototype.hasOwnProperty.call(draft.skills ?? {}, question.id) && draft.skills![question.id] === answer.value} onChange={() => change({ skills: { ...draft.skills, [question.id]: answer.value as Experience } })}>{answer.label}</Choice>)}</div></section><Mascot key={question.id} pose={(['think', 'wave', 'support'] as const)[(step - 11) % 3]} className={`question-mascot position-${(step - 11) % 3}`}/></> : <><Heading eyebrow="НАСТРОЙКА ТВОЕГО КУРСА" title={titles[step] ?? 'Твой опыт'}>{descriptions[step]}</Heading>
       {(step === 2 || step === 3) && <div className="choices option-panel">{metadata.profiles.filter(p => p.direction_id === (step === 2 ? 'mobile' : 'management')).map(p => {
         const key = step === 2 ? 'mobile' : 'management';
         return <Choice key={p.id} checked={(draft.profiles?.[key] ?? (key === 'mobile' ? 'mobile-all' : 'product')) === p.id} onChange={() => change({ profiles: { ...draft.profiles, [key]: p.id } })}>{p.title}</Choice>;

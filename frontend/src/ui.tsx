@@ -1,5 +1,5 @@
 import { useEffect, useRef, type ButtonHTMLAttributes, type ReactNode } from 'react';
-import { ApiError } from '../../api/client/client';
+import { ApiError, NetworkError } from '../../api/client/client';
 export function Button({ children, className = '', ...props }: ButtonHTMLAttributes<HTMLButtonElement>) {
   return <button className={`button ${className}`} {...props}>{children}</button>;
 }
@@ -19,7 +19,8 @@ export function message(error: unknown): string {
     };
     return friendly[error.detail.code] ?? (error.status === 503 ? 'Сервис пока недоступен. Попробуй ещё раз чуть позже.' : error.detail.message);
   }
-  return error instanceof Error && error.message === 'NO_MAX' ? 'Открой мини-приложение из бота в MAX.' : 'Не удалось связаться с сервисом. Ответы на экране сохранены — попробуй ещё раз.';
+  if (error instanceof NetworkError) return 'Не удалось связаться с сервисом. Проверь интернет и попробуй ещё раз — ответы остались на экране.';
+  return error instanceof Error && error.message === 'NO_MAX' ? 'Открой мини-приложение из бота в MAX.' : 'Не удалось выполнить действие в приложении. Ответы остались на экране. Попробуй ещё раз; если ошибка повторяется, сообщи нам.';
 }
 export function ErrorNotice({ error, retry }: { error: unknown; retry?: () => void }) {
   if (!error) return null;

@@ -32,7 +32,8 @@ export function steps(draft: DraftInput, questions: Question[]): number[] {
     ...(draft.preferred_format && draft.preferred_format !== 'online' ? [9] : []), 10, ...questions.map((_, i) => 11 + i), 60];
 }
 export function cleanDraft(draft: DraftInput, questions?: Question[]): DraftInput {
-  const copy = structuredClone(draft);
+  // DraftInput contains only JSON data; avoid structuredClone on older WebViews.
+  const copy: DraftInput = JSON.parse(JSON.stringify(draft));
   if (copy.preferred_cities) copy.preferred_cities = [...new Set(copy.preferred_cities.map(city => canonicalCity(city) ?? city.trim()).filter(Boolean))];
   if (!copy.directions.includes('backend')) delete copy.backend_languages;
   if (!copy.directions.includes('mobile') && copy.profiles) delete copy.profiles.mobile;
@@ -40,7 +41,7 @@ export function cleanDraft(draft: DraftInput, questions?: Question[]): DraftInpu
   if (!['vocational', 'undergraduate', 'graduate'].includes(copy.education_stage ?? '')) delete copy.study_year;
   if (copy.preferred_format === 'online') { delete copy.preferred_cities; delete copy.any_city; delete copy.other_city; }
   if (copy.any_city) { delete copy.preferred_cities; delete copy.other_city; }
-  if (questions) copy.skills = Object.fromEntries(questions.filter(q => Object.hasOwn(copy.skills ?? {}, q.id)).map(q => [q.id, copy.skills![q.id]]));
+  if (questions) copy.skills = Object.fromEntries(questions.filter(q => Object.prototype.hasOwnProperty.call(copy.skills ?? {}, q.id)).map(q => [q.id, copy.skills![q.id]]));
   return copy;
 }
 export function validation(draft: DraftInput, questions: Question[], metadata: Questionnaire): string | null {
@@ -53,7 +54,7 @@ export function validation(draft: DraftInput, questions: Question[], metadata: Q
   if (step === 9 && !draft.any_city) { const cityError = cityValidation(draft.preferred_cities); if (cityError) return cityError; }
   if (step >= 11 && step < 60) {
     const q = questions[step - 11];
-    if (!q || !Object.hasOwn(draft.skills ?? {}, q.id)) return 'Выбери ответ, в том числе можно «Не могу оценить».';
+    if (!q || !Object.prototype.hasOwnProperty.call(draft.skills ?? {}, q.id)) return 'Выбери ответ, в том числе можно «Не могу оценить».';
   }
   if (step === 60) {
     for (const check of steps(draft, questions).filter(s => s !== 60)) {
