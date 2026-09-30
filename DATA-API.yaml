@@ -1,0 +1,1446 @@
+# DATA-API verification manifest. No credentials are stored in this file.
+# Schema version is project-defined; see format_notes before automating checks.
+schema_version: '1.0'
+solution:
+  name: Курсик
+  repository: https://github.com/VictoriaGailitis/max-carreer-bot
+base_url: https://158.160.19.58
+openapi_file: api/openapi.yaml
+format_notes:
+- Project-defined checklist schema v1.0; the supplied task specifies required fields but no official parser schema.
+  Confirm evaluator compatibility with organizers.
+- Run checks in listed order. capture values use JSONPath. ${name} denotes a runtime variable, not a shell command.
+  Whole-value substitution preserves JSON types (integers and objects).
+- body_schema references resolve against components in this file. Assertions are human-readable conditions, not
+  executable code. A 204 response has no body/content type requirement.
+roles:
+  anonymous:
+    description: Unauthenticated request
+  test_user:
+    description: Dedicated disposable MAX test account; no admin role required
+    authentication: Fresh raw window.WebApp.initData from this bot; exchange via login. No username/password authentication
+      is implemented.
+inputs:
+  max_init_data:
+    required: true
+    secret: true
+    description: Obtain immediately before login from the MAX mini-app; lifetime checked by server is 5 minutes.
+      Never commit it.
+  completion_key:
+    required: true
+    secret: false
+    description: Generate a new UUID for each run; reuse unchanged for complete_replay.
+derived_variables:
+  skills:
+    after: preview
+    description: 'Build a JSON object from captured question_ids: each question ID maps to integer 0. This is synthetic
+      self-assessment data.'
+preconditions:
+- 'Use only a dedicated test account: the checks replace its draft/completed profile and add/remove a favorite.
+  Do not use an ordinary user account.'
+- The deployed API must correspond to the submitted Git commit and remain reachable during evaluation.
+- Import an editorially reviewed non-demo catalog containing at least one active backend course before running checks.
+  No catalog/503 is a failed prerequisite, not a successful main scenario.
+- MAX login is an external dependency. Synthetic initData from scripts/dev/local-init-data.py is permitted only
+  against the matching local-only environment.
+- The HTTPS address was supplied by the user; TLS, reachability and deployed commit must be verified separately.
+test_data:
+  profile: Synthetic values defined in save_draft; question IDs come from the live preview.
+  local_fixture: backend/testdata/catalog-demo.v1.json
+  local_fixture_note: is_demo=true fixtures are excluded from ordinary production results; use make smoke for isolated
+    fixture-based testing.
+  isolated_smoke_command: make smoke
+checks:
+- id: login
+  required: true
+  role: anonymous
+  method: POST
+  path: /api/v1/auth/max
+  parameters:
+    query: {}
+    path: {}
+    headers:
+      Content-Type: application/json
+    body:
+      init_data: ${max_init_data}
+  expected:
+    status_codes:
+    - 200
+    content_type: application/json
+    body_schema:
+      type: object
+      additionalProperties: false
+      required:
+      - token
+      - expires_at
+      - user_id
+      properties:
+        token:
+          type: string
+          description: Opaque bearer-токен; хранить в памяти клиента
+          minLength: 43
+          maxLength: 43
+        expires_at:
+          type: string
+          format: date-time
+        user_id:
+          type: string
+          format: uuid
+    assertions: []
+  capture:
+    session_token: $.token
+- id: questionnaire
+  required: true
+  role: test_user
+  method: GET
+  path: /api/v1/questionnaire
+  parameters:
+    query: {}
+    path: {}
+    headers:
+      Authorization: Bearer ${session_token}
+  expected:
+    status_codes:
+    - 200
+    content_type: application/json
+    body_schema:
+      $ref: '#/components/schemas/Questionnaire'
+    assertions: []
+- id: initial_state
+  required: true
+  role: test_user
+  method: GET
+  path: /api/v1/me
+  parameters:
+    query: {}
+    path: {}
+    headers:
+      Authorization: Bearer ${session_token}
+  expected:
+    status_codes:
+    - 200
+    content_type: application/json
+    body_schema: &id002
+      $ref: '#/components/schemas/UserState'
+    assertions: []
+  capture:
+    draft_revision: $.draft_revision
+- id: preview
+  required: true
+  role: test_user
+  method: POST
+  path: /api/v1/questionnaire/preview
+  parameters:
+    query: {}
+    path: {}
+    headers:
+      Authorization: Bearer ${session_token}
+      Content-Type: application/json
+    body:
+      directions:
+      - backend
+  expected:
+    status_codes:
+    - 200
+    content_type: application/json
+    body_schema:
+      type: object
+      additionalProperties: false
+      required:
+      - questionnaire_version
+      - selection_version
+      - directions
+      - question_count
+      - questions
+      properties:
+        questionnaire_version:
+          type: string
+          const: max-v2
+        selection_version:
+          type: integer
+          const: 1
+        directions:
+          type: array
+          items:
+            type: string
+        profiles:
+          type: object
+          additionalProperties:
+            type: string
+        question_count:
+          type: integer
+          enum:
+          - 8
+          - 12
+          - 16
+        questions:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required:
+            - id
+            - direction_id
+            - text
+            properties:
+              id:
+                type: string
+              direction_id:
+                type: string
+              text:
+                type: string
+    assertions:
+    - questions contains 8 items; each has a unique id
+  capture:
+    question_ids: $.questions[*].id
+- id: save_draft
+  required: true
+  role: test_user
+  method: PUT
+  path: /api/v1/me/draft
+  parameters:
+    query: {}
+    path: {}
+    headers:
+      Authorization: Bearer ${session_token}
+      Content-Type: application/json
+    body:
+      revision: ${draft_revision}
+      draft:
+        current_step: 60
+        directions:
+        - backend
+        goals:
+        - course
+        education_stage: undergraduate
+        study_year: 2
+        preferred_format: online
+        backend_languages:
+        - go
+        skills: ${skills}
+  expected:
+    status_codes:
+    - 200
+    content_type: application/json
+    body_schema:
+      $ref: '#/components/schemas/DraftResponse'
+    assertions:
+    - revision > initial_state.draft_revision
+  capture:
+    saved_revision: $.revision
+- id: read_draft
+  required: true
+  role: test_user
+  method: GET
+  path: /api/v1/me/draft
+  parameters:
+    query: {}
+    path: {}
+    headers:
+      Authorization: Bearer ${session_token}
+  expected:
+    status_codes:
+    - 200
+    content_type: application/json
+    body_schema:
+      $ref: '#/components/schemas/DraftResponse'
+    assertions:
+    - revision == saved_revision
+    - draft.skills equals the submitted skills object
+- id: complete
+  required: true
+  role: test_user
+  method: POST
+  path: /api/v1/me/onboarding/complete
+  parameters:
+    query: {}
+    path: {}
+    headers:
+      Authorization: Bearer ${session_token}
+      Content-Type: application/json
+      Idempotency-Key: ${completion_key}
+    body:
+      draft_revision: ${saved_revision}
+  expected:
+    status_codes:
+    - 200
+    content_type: application/json
+    body_schema: &id001
+      type: object
+      additionalProperties: false
+      required:
+      - profile
+      - revision
+      properties:
+        profile:
+          $ref: '#/components/schemas/Profile'
+        revision:
+          type: integer
+          minimum: 1
+    assertions: []
+  capture:
+    profile_revision: $.revision
+- id: complete_replay
+  required: true
+  role: test_user
+  method: POST
+  path: /api/v1/me/onboarding/complete
+  parameters:
+    query: {}
+    path: {}
+    headers:
+      Authorization: Bearer ${session_token}
+      Content-Type: application/json
+      Idempotency-Key: ${completion_key}
+    body:
+      draft_revision: ${saved_revision}
+  expected:
+    status_codes:
+    - 200
+    content_type: application/json
+    body_schema: *id001
+    assertions:
+    - response JSON equals complete response JSON
+- id: results
+  required: true
+  role: test_user
+  method: GET
+  path: /api/v1/me/results
+  parameters:
+    query: {}
+    path: {}
+    headers:
+      Authorization: Bearer ${session_token}
+  expected:
+    status_codes:
+    - 200
+    content_type: application/json
+    body_schema:
+      $ref: '#/components/schemas/AssessmentResult'
+    assertions:
+    - kind == self_assessment
+    - profile_revision == captured profile_revision
+    - directions[0].direction_id == backend
+    - directions[0].score_percent == 0
+    - directions[0].assessed_count == 8
+    - directions[0].coverage_percent == 100
+- id: completed_state
+  required: true
+  role: test_user
+  method: GET
+  path: /api/v1/me
+  parameters:
+    query: {}
+    path: {}
+    headers:
+      Authorization: Bearer ${session_token}
+  expected:
+    status_codes:
+    - 200
+    content_type: application/json
+    body_schema: *id002
+    assertions:
+    - profile != null
+    - draft == null
+- id: recommendations
+  required: true
+  role: test_user
+  method: GET
+  path: /api/v1/recommendations
+  parameters:
+    query: {}
+    path: {}
+    headers:
+      Authorization: Bearer ${session_token}
+  expected:
+    status_codes:
+    - 200
+    content_type: application/json
+    body_schema:
+      $ref: '#/components/schemas/CatalogResult'
+    assertions:
+    - every item.is_demo == false
+    - every item.effective_status == active
+- id: catalog
+  required: true
+  role: test_user
+  method: GET
+  path: /api/v1/opportunities
+  parameters:
+    query:
+      type: course
+      direction: backend
+    path: {}
+    headers:
+      Authorization: Bearer ${session_token}
+  expected:
+    status_codes:
+    - 200
+    content_type: application/json
+    body_schema:
+      $ref: '#/components/schemas/CatalogResult'
+    assertions:
+    - items has at least one item (test environment prerequisite)
+    - every item.type == course
+    - every item.directions contains backend
+    - every item.is_demo == false
+  capture:
+    opportunity_id: $.items[0].id
+- id: opportunity
+  required: true
+  role: test_user
+  method: GET
+  path: /api/v1/opportunities/{id}
+  parameters:
+    query: {}
+    path:
+      id: ${opportunity_id}
+    headers:
+      Authorization: Bearer ${session_token}
+  expected:
+    status_codes:
+    - 200
+    content_type: application/json
+    body_schema:
+      type: object
+      required:
+      - catalog_version
+      - profile_revision
+      - ranking_version
+      - evaluated_at
+      - item
+      properties:
+        catalog_version:
+          type: string
+        profile_revision:
+          type: integer
+        ranking_version:
+          type: integer
+          const: 1
+        evaluated_at:
+          type: string
+          format: date-time
+        item:
+          $ref: '#/components/schemas/RankedOpportunity'
+    assertions:
+    - item.id == opportunity_id
+    - item.action_url starts with https://
+- id: add_favorite
+  required: true
+  role: test_user
+  method: PUT
+  path: /api/v1/me/favorites/{id}
+  parameters:
+    query: {}
+    path:
+      id: ${opportunity_id}
+    headers:
+      Authorization: Bearer ${session_token}
+  expected:
+    status_codes:
+    - 204
+    content_type: null
+    body_schema: null
+    assertions: []
+- id: favorites
+  required: true
+  role: test_user
+  method: GET
+  path: /api/v1/me/favorites
+  parameters:
+    query: {}
+    path: {}
+    headers:
+      Authorization: Bearer ${session_token}
+  expected:
+    status_codes:
+    - 200
+    content_type: application/json
+    body_schema: &id003
+      $ref: '#/components/schemas/FavoritesResult'
+    assertions:
+    - items contains id == opportunity_id
+- id: remove_favorite
+  required: true
+  role: test_user
+  method: DELETE
+  path: /api/v1/me/favorites/{id}
+  parameters:
+    query: {}
+    path:
+      id: ${opportunity_id}
+    headers:
+      Authorization: Bearer ${session_token}
+  expected:
+    status_codes:
+    - 204
+    content_type: null
+    body_schema: null
+    assertions: []
+- id: favorites_after_remove
+  required: true
+  role: test_user
+  method: GET
+  path: /api/v1/me/favorites
+  parameters:
+    query: {}
+    path: {}
+    headers:
+      Authorization: Bearer ${session_token}
+  expected:
+    status_codes:
+    - 200
+    content_type: application/json
+    body_schema: *id003
+    assertions:
+    - items does not contain id == opportunity_id
+- id: logout
+  required: true
+  role: test_user
+  method: DELETE
+  path: /api/v1/auth/session
+  parameters:
+    query: {}
+    path: {}
+    headers:
+      Authorization: Bearer ${session_token}
+  expected:
+    status_codes:
+    - 204
+    content_type: null
+    body_schema: null
+    assertions: []
+- id: revoked_session
+  required: true
+  role: test_user
+  method: GET
+  path: /api/v1/me
+  parameters:
+    query: {}
+    path: {}
+    headers:
+      Authorization: Bearer ${session_token}
+  expected:
+    status_codes:
+    - 401
+    content_type: application/json
+    body_schema: &id004
+      $ref: '#/components/schemas/Error'
+    assertions:
+    - error.code == INVALID_SESSION
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+  schemas:
+    AssessmentSkill:
+      type: object
+      additionalProperties: false
+      required:
+      - question_id
+      - text
+      - answer
+      - answer_label
+      properties:
+        question_id:
+          type: string
+        text:
+          type: string
+        answer:
+          type:
+          - integer
+          - 'null'
+          enum:
+          - 0
+          - 1
+          - 2
+          - 3
+          - null
+        answer_label:
+          type: string
+    DirectionResult:
+      type: object
+      additionalProperties: false
+      required:
+      - direction_id
+      - title
+      - score_percent
+      - level
+      - level_label
+      - description
+      - basis
+      - assessed_count
+      - question_count
+      - coverage_percent
+      - skills
+      - focus_skills
+      - unassessed_skill_ids
+      - course_filter
+      properties:
+        direction_id:
+          type: string
+          enum:
+          - backend
+          - frontend
+          - mobile
+          - devops
+          - ml
+          - analytics
+          - security
+          - management
+        title:
+          type: string
+        score_percent:
+          type: integer
+          minimum: 0
+          maximum: 100
+        level:
+          type: string
+          enum:
+          - starter
+          - developing
+          - solid
+          - confident
+        level_label:
+          type: string
+        description:
+          type: string
+        basis:
+          type: string
+          enum:
+          - self_reported
+          - no_self_assessment
+        assessed_count:
+          type: integer
+          minimum: 0
+        question_count:
+          type: integer
+          minimum: 1
+        coverage_percent:
+          type: integer
+          minimum: 0
+          maximum: 100
+        skills:
+          type: array
+          items:
+            $ref: '#/components/schemas/AssessmentSkill'
+        focus_skills:
+          description: До трёх самых низких числовых самооценок ниже 3; null не является пробелом в знаниях
+          type: array
+          maxItems: 3
+          items:
+            $ref: '#/components/schemas/AssessmentSkill'
+        unassessed_skill_ids:
+          type: array
+          items:
+            type: string
+        course_filter:
+          type: object
+          additionalProperties: false
+          required:
+          - type
+          - direction
+          properties:
+            type:
+              type: string
+              const: course
+            direction:
+              type: string
+    AssessmentResult:
+      type: object
+      additionalProperties: false
+      required:
+      - kind
+      - scoring_version
+      - questionnaire_version
+      - profile_revision
+      - completed_at
+      - evaluated_at
+      - disclaimer
+      - directions
+      properties:
+        kind:
+          type: string
+          const: self_assessment
+        scoring_version:
+          type: integer
+          const: 1
+        questionnaire_version:
+          type: string
+        profile_revision:
+          type: integer
+        completed_at:
+          type: string
+          format: date-time
+        evaluated_at:
+          type: string
+          format: date-time
+        disclaimer:
+          type: string
+        directions:
+          type: array
+          minItems: 1
+          maxItems: 3
+          items:
+            $ref: '#/components/schemas/DirectionResult'
+    Questionnaire:
+      type: object
+      additionalProperties: false
+      required:
+      - questionnaire_version
+      - selection_version
+      - directions
+      - profiles
+      - answer_scale
+      - goals
+      - education_stages
+      - preferred_formats
+      - backend_languages
+      - general_questions
+      properties:
+        questionnaire_version:
+          type: string
+        selection_version:
+          type: integer
+          const: 1
+        directions:
+          type: array
+          items:
+            type: object
+            required:
+            - id
+            - title
+            - core_question_ids
+            properties:
+              id:
+                type: string
+              title:
+                type: string
+              core_question_ids:
+                type: array
+                items:
+                  type: string
+        profiles:
+          type: array
+          items:
+            type: object
+            required:
+            - id
+            - title
+            - direction_id
+            properties:
+              id:
+                type: string
+              title:
+                type: string
+              direction_id:
+                type: string
+              question_ids:
+                type: array
+                items:
+                  type: string
+              selection_rule:
+                type: string
+        answer_scale:
+          type: array
+          items:
+            type: object
+            required:
+            - value
+            - label
+            properties:
+              value:
+                type:
+                - integer
+                - 'null'
+                minimum: 0
+                maximum: 3
+              label:
+                type: string
+        goals:
+          type: array
+          items:
+            type: string
+        education_stages:
+          type: array
+          items:
+            type: string
+        preferred_formats:
+          type: array
+          items:
+            type: string
+        backend_languages:
+          type: array
+          items:
+            type: string
+        general_questions:
+          type: array
+          items:
+            type: object
+            required:
+            - id
+            - text
+            properties:
+              id:
+                type: string
+              text:
+                type: string
+    RankedOpportunity:
+      type: object
+      description: Публичная карточка и вычисленный статус; причины содержат не более двух кодов.
+      required:
+      - id
+      - type
+      - organizer_id
+      - title
+      - summary
+      - description
+      - directions
+      - format
+      - cities
+      - education_requirements
+      - requirements_text
+      - skill_requirements
+      - no_prerequisites
+      - details
+      - starts_at
+      - ends_at
+      - deadline_at
+      - source_url
+      - action_url
+      - checked_at
+      - publication_status
+      - availability
+      - is_demo
+      - effective_status
+      - reasons
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+          enum:
+          - course
+          - internship
+          - event
+        title:
+          type: string
+        summary:
+          type: string
+        description:
+          type: string
+        directions:
+          type: array
+          items:
+            type: string
+        format:
+          type: string
+          enum:
+          - online
+          - offline
+          - hybrid
+          - unknown
+        source_url:
+          type: string
+          format: uri
+        action_url:
+          type: string
+          format: uri
+        effective_status:
+          type: string
+          enum:
+          - active
+          - closed
+        organizer_id:
+          type: string
+        specializations:
+          type: array
+          items:
+            type: string
+        fully_remote_allowed:
+          type: boolean
+        cities:
+          type:
+          - array
+          - 'null'
+          items:
+            type: string
+        education_requirements:
+          oneOf:
+          - type: 'null'
+          - type: object
+            required:
+            - basis
+            properties:
+              stages:
+                type: array
+                items:
+                  type: string
+              study_year_min:
+                type: integer
+                minimum: 1
+                maximum: 6
+              study_year_max:
+                type: integer
+                minimum: 1
+                maximum: 6
+              basis:
+                type: string
+        requirements_text:
+          type:
+          - string
+          - 'null'
+        skill_requirements:
+          type:
+          - array
+          - 'null'
+          items:
+            type: object
+            required:
+            - skill_id
+            - min_experience
+            - basis
+            properties:
+              skill_id:
+                type: string
+              min_experience:
+                type: integer
+                minimum: 0
+                maximum: 3
+              basis:
+                type: string
+        no_prerequisites:
+          type:
+          - boolean
+          - 'null'
+        details:
+          type: object
+          properties:
+            course:
+              type: object
+              properties:
+                price_text:
+                  type: string
+                duration_text:
+                  type: string
+            internship:
+              type: object
+              properties:
+                compensation_text:
+                  type: string
+                duration_text:
+                  type: string
+            event:
+              type: object
+              properties:
+                venue:
+                  type: string
+                registration_text:
+                  type: string
+        starts_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+        ends_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+        deadline_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+        checked_at:
+          type: string
+          format: date-time
+        publication_status:
+          type: string
+          enum:
+          - draft
+          - published
+          - archived
+        availability:
+          type: string
+          enum:
+          - open
+          - closed
+          - unknown
+        is_demo:
+          type: boolean
+          const: false
+        availability_hint:
+          type: string
+          enum:
+          - check_source
+        reasons:
+          type: array
+          maxItems: 2
+          items:
+            type: object
+            required:
+            - code
+            properties:
+              code:
+                type: string
+                enum:
+                - direction_match
+                - goal_match
+                - no_prerequisites
+                - requirements_unknown
+              ref_id:
+                type: string
+    CatalogResult:
+      type: object
+      additionalProperties: false
+      required:
+      - catalog_version
+      - profile_revision
+      - ranking_version
+      - evaluated_at
+      - has_direction_matches
+      - items
+      properties:
+        catalog_version:
+          type: string
+        profile_revision:
+          type: integer
+          minimum: 1
+        ranking_version:
+          type: integer
+          const: 1
+        evaluated_at:
+          type: string
+          format: date-time
+        has_direction_matches:
+          type: boolean
+        items:
+          type: array
+          maxItems: 500
+          items:
+            $ref: '#/components/schemas/RankedOpportunity'
+    FavoritesResult:
+      type: object
+      additionalProperties: false
+      required:
+      - catalog_version
+      - profile_revision
+      - favorites_revision
+      - evaluated_at
+      - items
+      properties:
+        catalog_version:
+          type: string
+        profile_revision:
+          type: integer
+          minimum: 1
+        favorites_revision:
+          type: integer
+          minimum: 0
+        evaluated_at:
+          type: string
+          format: date-time
+        items:
+          type: array
+          maxItems: 500
+          items:
+            type: object
+            required:
+            - id
+            - effective_status
+            - item
+            properties:
+              id:
+                type: string
+              effective_status:
+                type: string
+                enum:
+                - active
+                - closed
+                - unavailable
+              item:
+                oneOf:
+                - $ref: '#/components/schemas/RankedOpportunity'
+                - type: 'null'
+    DraftInput:
+      type: object
+      additionalProperties: false
+      required:
+      - current_step
+      - directions
+      properties:
+        current_step:
+          type: integer
+          minimum: 1
+          maximum: 64
+        directions:
+          type: array
+          maxItems: 3
+          items:
+            type: string
+        profiles:
+          type: object
+          additionalProperties:
+            type: string
+        goals:
+          type: array
+          uniqueItems: true
+          items:
+            type: string
+            enum:
+            - course
+            - internship
+            - event
+            - explore
+        education_stage:
+          type: string
+          enum:
+          - vocational
+          - undergraduate
+          - graduate
+          - alumni
+          - other
+          - prefer_not_to_say
+        study_year:
+          type: integer
+          minimum: 1
+          maximum: 6
+        preferred_format:
+          type: string
+          enum:
+          - online
+          - offline
+          - both
+        preferred_cities:
+          description: Canonical city values from the bundled Russia city directory; repeated names require the
+            regional qualifier. Unknown names are rejected.
+          type: array
+          maxItems: 20
+          uniqueItems: true
+          items:
+            type: string
+            maxLength: 80
+        any_city:
+          type: boolean
+        other_city:
+          type: string
+          maxLength: 80
+          description: Legacy field; must also resolve to a city in the bundled directory.
+        backend_languages:
+          type: array
+          uniqueItems: true
+          items:
+            type: string
+        skills:
+          type: object
+          additionalProperties:
+            oneOf:
+            - type: integer
+              minimum: 0
+              maximum: 3
+            - type: 'null'
+    Profile:
+      type: object
+      additionalProperties: false
+      description: Завершённые ответы и вычисленные сервером версии; даты в RFC 3339.
+      required:
+      - schema_version
+      - questionnaire_version
+      - selection_version
+      - directions
+      - question_ids
+      - goals
+      - education_stage
+      - preferred_format
+      - skills
+      - completed_at
+      properties:
+        schema_version:
+          type: integer
+          const: 1
+        questionnaire_version:
+          type: string
+        selection_version:
+          type: integer
+          const: 1
+        question_ids:
+          type: array
+          items:
+            type: string
+        directions:
+          type: array
+          maxItems: 3
+          items:
+            type: string
+        profiles:
+          type: object
+          additionalProperties:
+            type: string
+        goals:
+          type: array
+          uniqueItems: true
+          items:
+            type: string
+            enum:
+            - course
+            - internship
+            - event
+            - explore
+        education_stage:
+          type: string
+          enum:
+          - vocational
+          - undergraduate
+          - graduate
+          - alumni
+          - other
+          - prefer_not_to_say
+        study_year:
+          type: integer
+          minimum: 1
+          maximum: 6
+        preferred_format:
+          type: string
+          enum:
+          - online
+          - offline
+          - both
+        preferred_cities:
+          description: Canonical city values from the bundled Russia city directory; repeated names require the
+            regional qualifier. Unknown names are rejected.
+          type: array
+          maxItems: 20
+          uniqueItems: true
+          items:
+            type: string
+            maxLength: 80
+        any_city:
+          type: boolean
+        other_city:
+          type: string
+          maxLength: 80
+          description: Legacy field; must also resolve to a city in the bundled directory.
+        backend_languages:
+          type: array
+          uniqueItems: true
+          items:
+            type: string
+        skills:
+          type: object
+          additionalProperties:
+            oneOf:
+            - type: integer
+              minimum: 0
+              maximum: 3
+            - type: 'null'
+        completed_at:
+          type: string
+          format: date-time
+    SavedDraft:
+      type: object
+      additionalProperties: false
+      description: Частичные ответы и серверные поля. base_profile_revision=0 может отсутствовать.
+      required:
+      - schema_version
+      - questionnaire_version
+      - selection_version
+      - directions
+      - question_ids
+      - current_step
+      properties:
+        schema_version:
+          type: integer
+          const: 1
+        questionnaire_version:
+          type: string
+        selection_version:
+          type: integer
+          const: 1
+        question_ids:
+          type: array
+          items:
+            type: string
+        directions:
+          type: array
+          maxItems: 3
+          items:
+            type: string
+        profiles:
+          type: object
+          additionalProperties:
+            type: string
+        goals:
+          type: array
+          uniqueItems: true
+          items:
+            type: string
+            enum:
+            - course
+            - internship
+            - event
+            - explore
+        education_stage:
+          type: string
+          enum:
+          - vocational
+          - undergraduate
+          - graduate
+          - alumni
+          - other
+          - prefer_not_to_say
+        study_year:
+          type: integer
+          minimum: 1
+          maximum: 6
+        preferred_format:
+          type: string
+          enum:
+          - online
+          - offline
+          - both
+        preferred_cities:
+          description: Canonical city values from the bundled Russia city directory; repeated names require the
+            regional qualifier. Unknown names are rejected.
+          type: array
+          maxItems: 20
+          uniqueItems: true
+          items:
+            type: string
+            maxLength: 80
+        any_city:
+          type: boolean
+        other_city:
+          type: string
+          maxLength: 80
+          description: Legacy field; must also resolve to a city in the bundled directory.
+        backend_languages:
+          type: array
+          uniqueItems: true
+          items:
+            type: string
+        skills:
+          type: object
+          additionalProperties:
+            oneOf:
+            - type: integer
+              minimum: 0
+              maximum: 3
+            - type: 'null'
+        current_step:
+          type: integer
+          minimum: 1
+          maximum: 64
+        base_profile_revision:
+          type: integer
+          minimum: 0
+    DraftResponse:
+      type: object
+      additionalProperties: false
+      required:
+      - draft
+      - revision
+      properties:
+        draft:
+          oneOf:
+          - $ref: '#/components/schemas/SavedDraft'
+          - type: 'null'
+        revision:
+          type: integer
+          minimum: 0
+    UserState:
+      type: object
+      additionalProperties: false
+      required:
+      - profile
+      - profile_revision
+      - draft
+      - draft_revision
+      properties:
+        profile:
+          oneOf:
+          - $ref: '#/components/schemas/Profile'
+          - type: 'null'
+        profile_revision:
+          type: integer
+          minimum: 0
+        draft:
+          oneOf:
+          - $ref: '#/components/schemas/SavedDraft'
+          - type: 'null'
+        draft_revision:
+          type: integer
+          minimum: 0
+    Error:
+      type: object
+      additionalProperties: false
+      required:
+      - error
+      properties:
+        error:
+          type: object
+          additionalProperties: false
+          required:
+          - code
+          - message
+          - request_id
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+            fields:
+              type: object
+              additionalProperties:
+                type: string
+            request_id:
+              type: string
+  responses:
+    NotFound:
+      description: Карточка отсутствует или не опубликована
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Conflict:
+      description: Ревизия или идемпотентный ключ конфликтуют
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    BadRequest:
+      description: Некорректный JSON
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Unauthorized:
+      description: Некорректная или истёкшая авторизация
+      content:
+        application/json:
+          schema: *id004
+    TooLarge:
+      description: Превышен лимит тела
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    UnsupportedMediaType:
+      description: Требуется application/json
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Validation:
+      description: Неверный выбор направлений или профилей
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Unavailable:
+      description: Хранилище недоступно
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
